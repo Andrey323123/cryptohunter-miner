@@ -5,14 +5,14 @@ const tg = window.Telegram?.WebApp;
 
 // Конфигурация из переменных окружения
 const CONFIG = {
-    API_BASE: 'https://cryptohunter-miner.up.railway.app'
+    API_BASE: window.location.origin,
     MIN_INVEST: 1,
     MIN_WITHDRAW: 1,
     DAILY_RATE: 0.25,
     BONUS_PERCENT: 5,
     REFERRAL_LEVEL1: 5,
     REFERRAL_LEVEL2: 2,
-    BOT_USERNAME: 'cruptos023bot'
+    BOT_USERNAME: '@CryptoHunterTonBot'
 };
 
 // Система перевода
