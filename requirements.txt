@@ -10,3 +10,4 @@ tonsdk
 qrcode[pil]
 aiohttp
 rich
+cryptography
