@@ -1,4 +1,4 @@
-# main.py — v0.4.0 ПРОДАКШН: + АВТОСОЗДАНИЕ ТАБЛИЦ + ФИКСЫ
+# main.py — v0.5.0 ПРОДАКШН: + WEBVIEW FIX + АВТОТАБЛИЦЫ + ФИКСЫ
 import asyncio
 import logging
 import sys
@@ -9,8 +9,12 @@ import urllib.parse
 import qrcode
 import base64
 from io import BytesIO
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 sys.path.append(str(Path(__file__).parent))
+
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -19,14 +23,10 @@ from config import BOT_TOKEN, TONKEEPER_API_KEY
 from bot.handlers import router
 from bot.admin import router as admin_router
 from bot.outreach import start_outreach
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
 import aiohttp
 from sqlalchemy import select
-from core.database import AsyncSessionLocal, engine  # ДОБАВИЛИ engine
-from core.models import Base, User, Referral, Transaction  # ДОБАВИЛИ Base
+from core.database import AsyncSessionLocal, engine
+from core.models import Base, User, Referral, Transaction
 from core.calculator import ProfitCalculator
 from core.tonkeeper import TonkeeperAPI
 
@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 # === FastAPI ===
 app = FastAPI()
 
-# === CORS ===
+# === CORS + TELEGRAM WEBVIEW FIX ===
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -48,6 +48,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def allow_telegram_webview(request: Request, call_next):
+    user_agent = request.headers.get("user-agent", "")
+    if any(x in user_agent for x in ["Telegram", "iPhone", "Android", "Mobile", "WebView"]):
+        response = await call_next(request)
+        response.headers["X-Frame-Options"] = "ALLOWALL"
+        response.headers["Content-Security-Policy"] = "frame-ancestors *;"
+        return response
+    return await call_next(request)
 
 # === ИНИЦИАЛИЗАЦИЯ Tonkeeper ===
 tonkeeper = TonkeeperAPI()
@@ -71,7 +81,6 @@ async def read_js():
 
 @app.get("/favicon.ico")
 async def read_favicon():
-    from fastapi.responses import Response
     return Response(content=b"", media_type="image/x-icon")
 
 @app.get("/webapp/assets/{filename}")
@@ -91,23 +100,21 @@ def validate_init_data(init_data: str) -> dict | None:
         user_data = json.loads(user_str)
         user_id = int(user_data["id"])
         return {"user_id": user_id, "username": user_data.get("username")}
-    except:
+    except Exception as e:
+        logger.error(f"Ошибка валидации initData: {e}")
         return None
 
 # === API: ПОЛЬЗОВАТЕЛЬ ===
 @app.post("/api/user")
 async def api_user(request: Request):
     user_info = validate_init_data(request.headers.get("X-Telegram-WebApp-Init-Data"))
-    if not user_info:
-        user_id = 8089114323  # тестовый
-    else:
-        user_id = user_info["user_id"]
+    user_id = user_info["user_id"] if user_info else 8089114323
     async with AsyncSessionLocal() as db:
         user = await db.get(User, user_id)
         if not user:
             user = User(
                 user_id=user_id,
-                username="test_user",
+                username=user_info.get("username", "test_user") if user_info else "test_user",
                 invested_amount=Decimal('100'),
                 free_mining_balance=Decimal('15.5'),
                 total_earned=Decimal('25.8')
@@ -126,10 +133,7 @@ async def api_user(request: Request):
 @app.post("/api/dashboard")
 async def api_dashboard(request: Request):
     user_info = validate_init_data(request.headers.get("X-Telegram-WebApp-Init-Data"))
-    if not user_info:
-        user_id = 8089114323
-    else:
-        user_id = user_info["user_id"]
+    user_id = user_info["user_id"] if user_info else 8089114323
     async with AsyncSessionLocal() as db:
         user = await db.get(User, user_id)
         if not user:
@@ -181,8 +185,7 @@ async def api_qr(data: dict, request: Request):
         raise HTTPException(400, "Min 1 TON")
     try:
         address = await tonkeeper.get_address()
-        url = f"ton://{address}?amount={amount}&testnet=true"
-        # Генерация QR
+        url = f"ton://{address}?amount={int(amount * 1e9)}"
         qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
         qr.add_data(url)
         qr.make(fit=True)
@@ -248,7 +251,7 @@ async def api_check(request: Request):
         amount = float(user.pending_deposit)
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                f"https://testnet.toncenter.com/api/v3/transactions?address={address}&limit=10",
+                f"https://toncenter.com/api/v3/transactions?address={address}&limit=10",
                 headers={"X-API-Key": TONKEEPER_API_KEY}
             ) as resp:
                 result = await resp.json()
@@ -281,7 +284,7 @@ async def api_referral(request: Request):
         user = await db.get(User, user_id)
         if not user:
             raise HTTPException(404)
-        link = f"https://t.me/cruptos023bot?start={user.user_id}"
+        link = f"https://t.me/CryptoHunterTonBot?start={user.user_id}"
         direct_result = await db.execute(
             select(Referral).where(Referral.referrer_id == user.user_id, Referral.level == 1)
         )
@@ -338,7 +341,7 @@ async def create_tables():
 # === СТАРТ ===
 async def on_startup():
     logger.info("CryptoHunter Miner Bot запущен")
-    await create_tables()  # АВТОСОЗДАНИЕ ТАБЛИЦ
+    await create_tables()
     asyncio.create_task(scheduler())
     asyncio.create_task(start_outreach())
 
