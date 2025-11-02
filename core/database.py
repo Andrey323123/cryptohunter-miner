@@ -1,12 +1,12 @@
-# core/database.py — v2.0: ПРЯМОЕ ЧТЕНИЕ MYSQLURL
+# core/database.py — v3.0: ЧИТАЕМ MYSQL_URL (Railway добавляет сам!)
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 import os
 
-# === ЧИТАЕМ MYSQLURL ПРЯМО ИЗ ПЕРЕМЕННЫХ RAILWAY ===
-DATABASE_URL = os.getenv("MYSQLURL")
+# === RAILWAY АВТОМАТИЧЕСКИ ДОБАВЛЯЕТ MYSQL_URL ===
+DATABASE_URL = os.getenv("MYSQL_URL")
 
 if not DATABASE_URL:
-    raise ValueError("MYSQLURL not set in Railway Variables!")
+    raise ValueError("MYSQL_URL not found! Check Railway Variables.")
 
 # === ДВИЖОК ===
 engine = create_async_engine(
