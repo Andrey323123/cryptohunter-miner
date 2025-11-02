@@ -10,7 +10,7 @@ import string
 import logging
 from config import (
     TONKEEPER_MNEMONIC, TONKEEPER_API_KEY,
-    TONCENTER_BASE_URL, TONCENTER_API_KEY
+    TONCENTER_BASE_URL
 )
 
 class TonkeeperAPI:
