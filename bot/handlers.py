@@ -9,8 +9,27 @@ from bot.keyboard import main_menu
 from sqlalchemy import select
 from decimal import Decimal
 import asyncio
+import re
 
 router = Router()
+
+def extract_referrer_id(payload: str) -> int | None:
+    """Извлекает ID реферера из payload"""
+    if not payload:
+        return None
+    
+    # Обрабатываем форматы: ref_12345, 12345, ref12345
+    if payload.startswith('ref_'):
+        ref_id = payload[4:]
+    elif payload.startswith('ref'):
+        ref_id = payload[3:]
+    else:
+        ref_id = payload
+    
+    # Проверяем, что это число
+    if ref_id.isdigit():
+        return int(ref_id)
+    return None
 
 # === /start + РЕФЕРАЛКА ===
 @router.message(Command("start"))
@@ -28,28 +47,29 @@ async def start(message: Message, state: FSMContext):
             user = User(
                 user_id=message.from_user.id,
                 username=message.from_user.username,
-                referrer_id=int(payload) if payload and payload.isdigit() else None
+                referrer_id=extract_referrer_id(payload)
             )
             db.add(user)
+            await db.commit()  # Сначала сохраняем пользователя
 
-        if payload and payload.isdigit() and is_new:
-            referrer_id = int(payload)
-            referrer_result = await db.execute(select(User).where(User.user_id == referrer_id))
-            referrer = referrer_result.scalar_one_or_none()
+        # Обработка рефералки только для новых пользователей
+        if is_new and payload:
+            referrer_id = extract_referrer_id(payload)
+            if referrer_id and referrer_id != user.user_id:
+                referrer_result = await db.execute(select(User).where(User.user_id == referrer_id))
+                referrer = referrer_result.scalar_one_or_none()
 
-            if referrer and referrer.user_id != user.user_id:
-                referral = Referral(
-                    referrer_id=referrer_id,
-                    referred_id=user.user_id,
-                    level=1,
-                    bonus_paid=Decimal('0')
-                )
-                db.add(referral)
-                referrer.referral_count += 1
-                await db.commit()
-                await message.answer("Вы зарегистрированы по реферальной ссылке!")
-
-        await db.commit()
+                if referrer:
+                    referral = Referral(
+                        referrer_id=referrer_id,
+                        referred_id=user.user_id,
+                        level=1,
+                        bonus_paid=Decimal('0')
+                    )
+                    db.add(referral)
+                    referrer.referral_count += 1
+                    await db.commit()
+                    await message.answer("🎉 Вы зарегистрированы по реферальной ссылке!")
 
         await message.answer(
             "Добро пожаловать в *CryptoHunter Miner*!\n"
@@ -60,7 +80,8 @@ async def start(message: Message, state: FSMContext):
         )
 
         # === УМНЫЕ НАПОМИНАНИЯ ===
-        asyncio.create_task(send_reminders(message))
+        if is_new:  # Напоминания только для новых пользователей
+            asyncio.create_task(send_reminders(message))
 
 async def send_reminders(message: Message):
     """Отправка напоминаний пользователю"""
