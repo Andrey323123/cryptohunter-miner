@@ -49,14 +49,14 @@ PREDEFINED_CHANNELS = [
 
 # Базовые крипто-термины (15 баллов)
 CRYPTO_BASIC_KEYWORDS = [
-    "КРИПТОВАЛЮТА", "CRYPTO", "CRYPTOCURRENCY", "БИТКОИН", "BITCOIN", "BTC", 
+    "КРИПТОВАЛЮТА", "CRYPTO", "CRYPTOCURRENCY", "БИТКОИН", "BITCOIN", "BTC",
     "АЛЬТКОИН", "ALTCOIN", "АЛЬТКОИНЫ", "ALTS", "БЛОКЧЕЙН", "BLOCKCHAIN",
     "NFT", "НФТ", "СТЕЙКИНГ", "STAKING", "СТЕЙБЛКОИН", "STABLECOIN",
     "ЭФИРИУМ", "ETHEREUM", "ETH", "SOLANA", "SOL", "CARDANO", "ADA",
     "POLKADOT", "DOT", "DOGECOIN", "DOGE", "LITECOIN", "LTC", "RIPPLE", "XRP"
 ]
 
-# TON экосистема (25 баллов)  
+# TON экосистема (25 баллов)
 TON_ECOSYSTEM_KEYWORDS = [
     "TONCOIN", "TON", "ТОН", "THEOPENNETWORK", "TON WALLET", "TON КОШЕЛЕК",
     "TONKEEPER", "TON SPACE", "TON DEFI", "TON DNS", "TON APPS", "TON APPLICATIONS",
@@ -124,7 +124,7 @@ async def get_predefined_channels():
     
     return channels_to_scan
 
-# === Поиск НОВЫХ каналов в диалогах ===
+# === Поиск новых каналов в диалогах ===
 async def search_new_channels_in_dialogs(predefined_channels):
     found_channels = []
     predefined_usernames = {ch["username"].lower() for ch in predefined_channels if ch["username"]}
@@ -233,10 +233,9 @@ async def search_channels_globally(predefined_channels):
 # === ОБНОВЛЕННАЯ ФУНКЦИЯ ОЦЕНКИ ИНТЕРЕСА ===
 async def calculate_interest_score(text: str):
     score = 0
-    found_keywords = []  # Здесь будут и КАТЕГОРИИ и КОНКРЕТНЫЕ слова
+    found_keywords = []
     upper = text.upper()
 
-    # Словари для категорий
     category_keywords = {
         "крипто": CRYPTO_BASIC_KEYWORDS,
         "TON": TON_ECOSYSTEM_KEYWORDS, 
@@ -245,16 +244,13 @@ async def calculate_interest_score(text: str):
         "жалобы": LOSS_KEYWORDS
     }
 
-    # Проверяем каждую категорию
     for category, keywords_list in category_keywords.items():
         category_found = False
         for keyword in keywords_list:
             if keyword in upper:
-                # Добавляем КОНКРЕТНОЕ слово
                 found_keywords.append(keyword)
                 category_found = True
                 
-                # Начисляем баллы
                 if category == "крипто":
                     score += 15
                 elif category == "TON":
@@ -266,7 +262,6 @@ async def calculate_interest_score(text: str):
                 elif category == "жалобы":
                     score += 25
         
-        # Если нашли слова из категории - добавляем и КАТЕГОРИЮ
         if category_found:
             found_keywords.append(category)
 
@@ -306,14 +301,12 @@ async def scan_channel(channel_info):
 async def process_lead(user_id, source_channel, score, keywords, source_type):
     try:
         async with AsyncSessionLocal() as db:
-            # Проверяем, есть ли уже такой лид
             result = await db.execute(select(Lead).where(Lead.user_id == user_id))
             existing = result.scalar_one_or_none()
             if existing:
                 logger.info(f"Лид {user_id} уже существует в БД")
                 return
 
-            # Получаем username и имя пользователя
             try:
                 user = await client.get_entity(user_id)
                 username = getattr(user, "username", None)
@@ -323,7 +316,6 @@ async def process_lead(user_id, source_channel, score, keywords, source_type):
                 username = None
                 first_name = None
 
-            # Создаём новый лид с корректным datetime
             lead = Lead(
                 user_id=user_id,
                 username=username,
@@ -355,23 +347,19 @@ async def filter_channels(channels):
     filtered_channels = []
     
     for channel in channels:
-        # Безопасная проверка ID
         channel_id = channel.get("id")
         if channel_id is None:
             logger.debug(f"Пропускаем канал без ID: {channel.get('title', 'Unknown')}")
             continue
             
-        # Проверяем что ID - число
         if not isinstance(channel_id, int):
             logger.debug(f"Пропускаем канал с некорректным ID: {channel.get('title', 'Unknown')} (ID: {channel_id})")
             continue
             
-        # Исключаем каналы с ID < 0 (группы и супергруппы)
         if channel_id < 0:
             logger.debug(f"Пропускаем канал с отрицательным ID: {channel.get('title', 'Unknown')} (ID: {channel_id})")
             continue
             
-        # Безопасная проверка количества участников
         participants_count = channel.get("participants_count")
         if participants_count is not None and participants_count > 100000:
             logger.debug(f"Пропускаем слишком большой канал: {channel.get('title', 'Unknown')} ({participants_count} участников)")
@@ -385,128 +373,50 @@ async def filter_channels(channels):
 # === Основной процесс ===
 async def run_scanner():
     await client.start(phone=PHONE)
-    logger.info("🚀 Сканер лидов v2.5 запущен — поиск и сохранение (без рассылки)")
+    logger.info("🚀 Сканер лидов запущен")
 
-    # Получаем каналы
+    await check_database_structure()
+
     predefined_channels = await get_predefined_channels()
-    new_channels_from_dialogs = await search_new_channels_in_dialogs(predefined_channels)
-    new_channels_from_search = await search_channels_globally(predefined_channels)
-    
-    # Объединяем и убираем дубли
-    all_channels = predefined_channels + new_channels_from_dialogs + new_channels_from_search
-    
-    # Убираем дубли по ID (только для каналов с корректными ID)
-    unique_channels = {}
-    for ch in all_channels:
-        if isinstance(ch.get("id"), int):
-            unique_channels[ch["id"]] = ch
-    
-    all_channels = list(unique_channels.values())
-    
-    # Фильтруем каналы
+    new_channels = await search_new_channels_in_dialogs(predefined_channels)
+    global_channels = await search_channels_globally(predefined_channels)
+
+    all_channels = predefined_channels + new_channels + global_channels
     all_channels = await filter_channels(all_channels)
 
-    logger.info(f"📊 Всего каналов для сканирования: {len(all_channels)}")
-    logger.info(f"   • Из списка: {len(predefined_channels)}")
-    logger.info(f"   • Новые из диалогов: {len(new_channels_from_dialogs)}") 
-    logger.info(f"   • Новые из поиска: {len(new_channels_from_search)}")
+    logger.info(f"Всего каналов к сканированию: {len(all_channels)}")
 
     total_leads = 0
-    processed_channels = 0
-
     for channel in all_channels:
-        leads_found = await scan_channel(channel)
-        total_leads += leads_found
-        processed_channels += 1
-        
-        # Прогресс
-        if processed_channels % 10 == 0:
-            logger.info(f"📈 Прогресс: {processed_channels}/{len(all_channels)} каналов обработано")
-            
-        await asyncio.sleep(2)  # защита от флуда
+        leads = await scan_channel(channel)
+        total_leads += leads
+        await asyncio.sleep(2)
 
-    logger.info(f"✅ Сканирование завершено: {processed_channels}/{len(all_channels)} каналов обработано")
-    logger.info(f"🎯 Найдено и сохранено лидов: {total_leads}")
-    await client.disconnect()
-    return total_leads
+    logger.info(f"✅ Сканирование завершено. Всего найдено лидов: {total_leads}")
 
-# === Статистика по найденным лидам ===
-async def show_leads_statistics():
-    try:
-        async with AsyncSessionLocal() as db:
-            result = await db.execute(select(Lead))
-            leads = result.scalars().all()
-            
-            logger.info(f"📈 СТАТИСТИКА БАЗЫ ДАННЫХ:")
-            logger.info(f"   • Всего лидов в БД: {len(leads)}")
-            
-            # Статистика по источникам
-            source_stats = {}
-            status_stats = {}
-            score_stats = {"high": 0, "medium": 0, "low": 0}
-            
-            # Статистика по ключевым словам
-            keyword_stats = {}
-            
-            for lead in leads:
-                # Статистика по источникам
-                source_stats[lead.source_type] = source_stats.get(lead.source_type, 0) + 1
-                
-                # Статистика по статусам
-                status_stats[lead.conversion_status] = status_stats.get(lead.conversion_status, 0) + 1
-                
-                # Статистика по баллам
-                if lead.interest_score >= 70:
-                    score_stats["high"] += 1
-                elif lead.interest_score >= 50:
-                    score_stats["medium"] += 1
-                else:
-                    score_stats["low"] += 1
-                
-                # Статистика по ключевым словам
-                if lead.keywords_list:
-                    for keyword in lead.keywords_list:
-                        keyword_stats[keyword] = keyword_stats.get(keyword, 0) + 1
-            
-            logger.info(f"   • По источникам: {source_stats}")
-            logger.info(f"   • По статусам: {status_stats}")
-            logger.info(f"   • По баллам интереса: {score_stats}")
-            logger.info(f"   • Топ ключевых слов: {dict(sorted(keyword_stats.items(), key=lambda x: x[1], reverse=True)[:15])}")
-            
-    except Exception as e:
-        logger.error(f"Ошибка при получении статистики: {e}")
-
-# === Главный цикл ===
+# === Запуск ===
 async def main():
-    await check_database_structure()
-    logger.info("=== 🎯 CRYPTOHUNTER SCANNER v2.5 (РАСШИРЕННАЯ) ===")
+    await run_scanner()
 
-    cycle = 0
-    while True:
-        try:
-            cycle += 1
-            logger.info(f"=== 🔄 ЦИКЛ #{cycle} ===")
-            
-            # Показываем статистику перед началом сканирования
-            await show_leads_statistics()
-            
-            leads_found = await run_scanner()
-
-            if leads_found > 0:
-                logger.info(f"🎉 УСПЕХ: Сохранено {leads_found} новых лидов. Ждём 2 часа...")
-                await asyncio.sleep(7200)  # 2 часа
-            else:
-                logger.info("⏳ Лидов не найдено. Повтор через 30 минут...")
-                await asyncio.sleep(1800)  # 30 минут
-                
-        except Exception as e:
-            logger.error(f"💥 КРИТИЧЕСКАЯ ОШИБКА в main: {e}")
-            await asyncio.sleep(300)  # 5 минут на восстановление
-
-# === Запуск приложения ===
+# === ИСПРАВЛЕННЫЙ БЛОК ЗАПУСКА ===
 if __name__ == "__main__":
+    import uvloop
+
     try:
-        asyncio.run(main())
+        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+    except Exception as e:
+        logger.warning(f"Не удалось установить uvloop: {e}")
+
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            logger.warning("Активен существующий event loop — создаём новый")
+            new_loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(new_loop)
+            new_loop.run_until_complete(main())
+        else:
+            loop.run_until_complete(main())
+
     except KeyboardInterrupt:
         logger.info("⏹️ Сканер остановлен пользователем")
     except Exception as e:
