@@ -1,4 +1,5 @@
-# main.py — v0.6.0 POLLING-ONLY ВЕРСИЯ ДЛЯ RAILWAY
+# main.py — v0.7.0 FIXED RAILWAY VERSION
+import os
 import asyncio
 import logging
 import sys
@@ -38,7 +39,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # === FastAPI ===
-app = FastAPI()
+app = FastAPI(title="CryptoHunter Miner")
 
 # === CORS + TELEGRAM WEBVIEW FIX ===
 app.add_middleware(
@@ -71,6 +72,10 @@ app.mount("/assets", StaticFiles(directory="bot/webapp/assets"), name="assets")
 async def root():
     from fastapi.responses import FileResponse
     return FileResponse("bot/webapp/index.html")
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "service": "CryptoHunter Miner API"}
 
 @app.get("/style.css")
 async def read_css():
@@ -331,59 +336,66 @@ async def scheduler():
     aioschedule.every().day.at("00:00").do(lambda: asyncio.create_task(daily_accrual()))
     while True:
         await aioschedule.run_pending()
-        await asyncio.sleep(1)
+        await asyncio.sleep(60)  # Увеличил интервал для экономии ресурсов
 
 # === АВТОСОЗДАНИЕ ТАБЛИЦ ===
 async def create_tables():
     try:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
-        logger.info("ТАБЛИЦЫ СОЗДАНЫ АВТОМАТИЧЕСКИ!")
+        logger.info("✅ ТАБЛИЦЫ БАЗЫ ДАННЫХ СОЗДАНЫ")
     except Exception as e:
-        logger.error(f"Ошибка создания таблиц: {e}")
+        logger.error(f"❌ Ошибка создания таблиц: {e}")
 
-# === СТАРТ БОТА (POLLING) ===
-async def start_bot():
-    logger.info("CryptoHunter Miner Bot запущен в режиме POLLING")
-    
-    await create_tables()
-    
-    default = DefaultBotProperties(parse_mode=ParseMode.HTML)
-    bot = Bot(token=BOT_TOKEN, default=default)
-    storage = MemoryStorage()
-    dp = Dispatcher(storage=storage)
+# === БОТ В ФОНОВОМ РЕЖИМЕ ===
+async def start_bot_background():
+    """Запуск бота как фоновой задачи"""
+    try:
+        logger.info("🤖 ЗАПУСК БОТА В ФОНОВОМ РЕЖИМЕ...")
+        
+        default = DefaultBotProperties(parse_mode=ParseMode.HTML)
+        bot = Bot(token=BOT_TOKEN, default=default)
+        storage = MemoryStorage()
+        dp = Dispatcher(storage=storage)
 
-    dp.include_router(router)
-    dp.include_router(admin_router)
-    
-    logger.info("=== ЗАРЕГИСТРИРОВАННЫЕ КОМАНДЫ ===")
-    for handler in dp.message.handlers:
-        if hasattr(handler, 'filters'):
-            for filter in handler.filters:
-                if hasattr(filter, 'commands'):
-                    logger.info(f"Команда: {filter.commands}")
-
-    # Запускаем фоновые задачи
-    asyncio.create_task(scheduler())
-    asyncio.create_task(start_outreach())
-    
-    # ✅ ЗАПУСКАЕМ ТОЛЬКО POLLING
-    await dp.start_polling(bot)
-
-# === ЗАПУСК ВЕБ-СЕРВЕРА ДЛЯ MINI APP ===
-async def start_web_server():
-    import uvicorn
-    config = uvicorn.Config(app, host="0.0.0.0", port=5000, log_level="info")
-    server = uvicorn.Server(config)
-    await server.serve()
+        dp.include_router(router)
+        dp.include_router(admin_router)
+        
+        logger.info("✅ БОТ ЗАПУЩЕН (POLLING)")
+        await dp.start_polling(bot)
+    except Exception as e:
+        logger.error(f"❌ Ошибка бота: {e}")
+        # Перезапуск через 30 секунд при ошибке
+        await asyncio.sleep(30)
+        asyncio.create_task(start_bot_background())
 
 # === ГЛАВНАЯ ФУНКЦИЯ ===
 async def main():
-    # Запускаем оба сервиса параллельно
-    await asyncio.gather(
-        start_bot(),           # Бот в режиме polling
-        start_web_server()     # Веб-сервер для Mini App
+    """Основная функция запуска для Railway"""
+    logger.info("🚀 ЗАПУСК CRYPTOHUNTER MINER НА RAILWAY...")
+    
+    # Создаем таблицы БД
+    await create_tables()
+    
+    # Запускаем фоновые задачи
+    asyncio.create_task(start_bot_background())
+    asyncio.create_task(scheduler())
+    asyncio.create_task(start_outreach())
+    
+    # Запускаем веб-сервер (ОСНОВНОЙ процесс для Railway)
+    import uvicorn
+    port = int(os.getenv("PORT", 5000))
+    logger.info(f"🌐 ЗАПУСК ВЕБ-СЕРВЕРА НА ПОРТУ {port}")
+    
+    config = uvicorn.Config(
+        app, 
+        host="0.0.0.0", 
+        port=port, 
+        log_level="info",
+        access_log=True
     )
+    server = uvicorn.Server(config)
+    await server.serve()
 
 if __name__ == "__main__":
     asyncio.run(main())
