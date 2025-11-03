@@ -319,38 +319,36 @@ async def api_referral(request: Request):
     async with AsyncSessionLocal() as db:
         user = await db.get(User, user_id)
         if not user:
-            raise HTTPException(404, "User not found")
-        
-        # Правильная реферальная ссылка
-        link = f"https://t.me/CryptoHunterTonBot?start=ref_{user.user_id}"
-        
-        # Получаем статистику рефералов
-        direct_result = await db.execute(
-            select(Referral).where(
-                Referral.referrer_id == user.user_id, 
-                Referral.level == 1
+            # ←←←←  СОЗДАЁМ ПОЛЬЗОВАТЕЛЯ, ЕСЛИ ЕГО НЕТ
+            user = User(
+                user_id=user_id,
+                username=user_info.get("username", "anon") if user_info else "anon",
+                invested_amount=0,
+                free_mining_balance=15.5,
+                total_earned=0
             )
+            db.add(user)
+            await db.flush()        # получаем user.id сразу
+            await db.commit()
+
+        # Теперь user_id 100% есть
+        link = f"https://t.me/CryptoHunterTonBot?start=ref_{user.user_id}"
+
+        # статистика (как было)
+        direct_result = await db.execute(
+            select(Referral).where(Referral.referrer_id == user.user_id, Referral.level == 1)
         )
         direct = direct_result.scalars().all()
-        
+
         level2_count = 0
-        from decimal import Decimal
         total_income = Decimal('0')
-        
-        # Считаем рефералов 2 уровня и общий доход
         for ref in direct:
-            # Рефералы 2 уровня
-            l2_result = await db.execute(
-                select(Referral).where(
-                    Referral.referrer_id == ref.referred_id, 
-                    Referral.level == 2
-                )
+            l2 = await db.execute(
+                select(Referral).where(Referral.referrer_id == ref.referred_id, Referral.level == 2)
             )
-            level2_count += len(l2_result.scalars().all())
-            
-            # Суммируем доход
+            level2_count += l2.scalar_one_or_none() and 1 or len(l2.scalars().all())
             total_income += ref.bonus_paid or Decimal('0')
-        
+
         return {
             "link": link,
             "direct_count": len(direct),
