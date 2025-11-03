@@ -1,9 +1,10 @@
-# main.py — v1.6 — РАССЫЛКА ПЕРВАЯ → СКАНИРОВАНИЕ
+# main.py — v1.7 — ЕЖЕЧАСНЫЕ И ЕЖЕДНЕВНЫЕ НАЧИСЛЕНИЯ
 import os
 import asyncio
 import logging
 import sys
 from pathlib import Path
+from datetime import datetime, timedelta
 
 # УСТАНОВКА EVENT LOOP
 import uvloop
@@ -335,30 +336,88 @@ async def api_referral(request: Request):
             "income": float(total_income)
         }
 
-# === Ежедневные начисления ===
-async def daily_accrual():
+# === ЕЖЕЧАСНЫЕ начисления ===
+async def hourly_accrual():
+    """Начисления каждый час"""
     try:
         async with AsyncSessionLocal() as db:
             users = (await db.execute(select(User))).scalars().all()
+            total_accrued = 0
+            users_count = 0
+            
             for user in users:
                 from decimal import Decimal
                 invested = user.invested_amount or Decimal('0')
-                daily = ProfitCalculator.total_daily_income(invested)
-                user.free_mining_balance += daily
-                user.total_earned += daily
-                user.mining_speed = ProfitCalculator.mining_speed(invested)
+                
+                if invested > 0:  # Только у кого есть инвестиции
+                    hourly = ProfitCalculator.total_daily_income(invested) / 24
+                    if hourly > 0:
+                        user.free_mining_balance += hourly
+                        user.total_earned += hourly
+                        total_accrued += float(hourly)
+                        users_count += 1
+            
             await db.commit()
-            logger.info("✅ Ежедневные начисления выполнены")
+            
+            if users_count > 0:
+                logger.info(f"✅ Ежечасные начисления: {users_count} пользователей, {total_accrued:.6f} TON")
+            else:
+                logger.info("ℹ️ Нет пользователей с инвестициями для начислений")
+                
     except Exception as e:
-        logger.error(f"❌ Ошибка начислений: {e}")
+        logger.error(f"❌ Ошибка ежечасных начислений: {e}")
+
+# === ЕЖЕДНЕВНЫЕ начисления (бонусные) ===
+async def daily_accrual():
+    """Дополнительные ежедневные начисления"""
+    try:
+        async with AsyncSessionLocal() as db:
+            users = (await db.execute(select(User))).scalars().all()
+            total_accrued = 0
+            users_count = 0
+            
+            for user in users:
+                from decimal import Decimal
+                invested = user.invested_amount or Decimal('0')
+                
+                if invested > 0:
+                    # Бонусные начисления (1% от депозита)
+                    daily_bonus = invested * Decimal('0.01')
+                    user.free_mining_balance += daily_bonus
+                    user.total_earned += daily_bonus
+                    total_accrued += float(daily_bonus)
+                    users_count += 1
+            
+            await db.commit()
+            
+            if users_count > 0:
+                logger.info(f"🎁 Ежедневные бонусы: {users_count} пользователей, {total_accrued:.6f} TON")
+            else:
+                logger.info("ℹ️ Нет пользователей для ежедневных бонусов")
+                
+    except Exception as e:
+        logger.error(f"❌ Ошибка ежедневных начислений: {e}")
 
 # === Планировщик ===
 async def scheduler():
+    """Улучшенный планировщик с ежечасными и ежедневными начислениями"""
     import aioschedule
+    
+    # Ежечасные начисления (каждый час)
+    aioschedule.every().hour.at(":00").do(lambda: asyncio.create_task(hourly_accrual()))
+    
+    # Ежедневные бонусные начисления (в полночь)
     aioschedule.every().day.at("00:00").do(lambda: asyncio.create_task(daily_accrual()))
+    
+    logger.info("⏰ Планировщик запущен: ежечасные и ежедневные начисления")
+    
     while True:
-        await aioschedule.run_pending()
-        await asyncio.sleep(60)
+        try:
+            await aioschedule.run_pending()
+            await asyncio.sleep(30)  # Проверяем каждые 30 секунд
+        except Exception as e:
+            logger.error(f"❌ Ошибка планировщика: {e}")
+            await asyncio.sleep(60)
 
 # === Создание таблиц ===
 async def create_tables():
@@ -463,13 +522,13 @@ async def main_worker():
 
 # === Главная функция ===
 async def main():
-    logger.info("🚀 ЗАПУСК CRYPTOHUNTER MINER v1.6 - РАССЫЛКА ПЕРВАЯ → СКАНИРОВАНИЕ")
+    logger.info("🚀 ЗАПУСК CRYPTOHUNTER MINER v1.7 - ЕЖЕЧАСНЫЕ НАЧИСЛЕНИЯ")
 
     await create_tables()
 
     # Запуск фоновых сервисов
     asyncio.create_task(start_bot_background())      # Постоянно
-    asyncio.create_task(scheduler())                 # По расписанию
+    asyncio.create_task(scheduler())                 # По расписанию (НАЧИСЛЕНИЯ!)
     asyncio.create_task(start_outreach())            # Outreach из bot.outreach
     
     # Запуск главного рабочего цикла (РАССЫЛКА ПЕРВАЯ!)
