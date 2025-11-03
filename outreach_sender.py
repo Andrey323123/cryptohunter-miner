@@ -1,4 +1,4 @@
-# outreach_sender.py — v3.3 — ФИКСИРОВАННЫЙ ИНТЕРВАЛ
+# outreach_sender.py — v3.4 — ОДНА СЕССИЯ
 import asyncio
 import logging
 import random
@@ -14,11 +14,7 @@ import os
 # === ЗАГРУЗКА .ENV ===
 load_dotenv()
 API_ID = int(os.getenv("API_ID"))
-API_HASH = os.getenv("API_HASH")
-PHONE = os.getenv("PHONE")
-
-if not all([API_ID, API_HASH, PHONE]):
-    raise ValueError("API_ID, API_HASH, PHONE — обязательны в .env!")
+API_HASH = os.getenv("API_HASH"))
 
 # === ЛОГИ ===
 logging.basicConfig(
@@ -93,12 +89,11 @@ def get_template_for_lead(lead):
 
 # === БЕЗОПАСНАЯ РАССЫЛКА ===
 async def safe_send():
-    # Уникальная сессия для каждого запуска
-    session_name = f"outreach_{int(asyncio.get_event_loop().time())}"
-    client = TelegramClient(session_name, API_ID, API_HASH)
+    # ИСПОЛЬЗУЕМ ТУ ЖЕ СЕССИЮ ЧТО И ДЛЯ СКАНИРОВАНИЯ
+    client = TelegramClient("scanner_session", API_ID, API_HASH)
     
-    await client.start(phone=PHONE)
-    logger.info("📨 Рассылка запущена — v3.3")
+    await client.start()
+    logger.info("📨 Рассылка запущена — v3.4")
 
     async with AsyncSessionLocal() as db:
         leads = (await db.execute(
@@ -142,7 +137,7 @@ async def safe_send():
 
 # === ГЛАВНЫЙ ЦИКЛ (для standalone запуска) ===
 async def main():
-    logger.info("📨 OUTREACH SENDER v3.3 — STARTED")
+    logger.info("📨 OUTREACH SENDER v3.4 — STARTED")
     while True:
         try:
             await safe_send()
