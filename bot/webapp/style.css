@@ -233,6 +233,163 @@ h1 {
     margin-bottom: 0;
 }
 
+/* ===== СТИЛИ ДЛЯ СТАТИСТИКИ ПОДПИСЧИКОВ ===== */
+.community-stats {
+    background: rgba(0, 255, 204, 0.1);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    border: 1px solid rgba(0, 255, 204, 0.2);
+}
+
+.community-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.community-stat:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.community-label {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.community-value {
+    font-size: 16px;
+    font-weight: bold;
+    color: #00ffcc;
+}
+
+.community-change {
+    font-size: 14px;
+    color: #4CAF50;
+    font-weight: 600;
+}
+
+/* ===== СТИЛИ ДЛЯ ТОП ИНВЕСТОРОВ ===== */
+.top-investors-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 10px;
+}
+
+.investor-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+}
+
+.investor-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+}
+
+.investor-rank {
+    font-size: 1.4em;
+    margin-right: 15px;
+    min-width: 30px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.investor-info {
+    flex: 1;
+}
+
+.investor-wallet {
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 4px;
+}
+
+.investor-amount {
+    font-size: 14px;
+    font-weight: bold;
+    color: #00ffcc;
+}
+
+/* Специальные стили для первых трех мест */
+.investor-item:nth-child(1) .investor-rank {
+    color: gold;
+    text-shadow: 0 0 10px gold;
+}
+
+.investor-item:nth-child(2) .investor-rank {
+    color: silver;
+    text-shadow: 0 0 10px silver;
+}
+
+.investor-item:nth-child(3) .investor-rank {
+    color: #cd7f32; /* bronze */
+    text-shadow: 0 0 10px #cd7f32;
+}
+
+/* ===== СТИЛИ ДЛЯ ЗАЯВОК НА ВЫВОД ===== */
+.withdraw-requests-list {
+    max-height: 250px;
+    overflow-y: auto;
+    margin-top: 10px;
+}
+
+.withdraw-request-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    margin-bottom: 6px;
+    transition: all 0.3s ease;
+}
+
+.withdraw-request-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.request-wallet {
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+    color: rgba(255, 255, 255, 0.8);
+    flex: 1;
+}
+
+.request-amount {
+    font-size: 13px;
+    font-weight: bold;
+    color: #00ffcc;
+    margin: 0 15px;
+}
+
+.request-status {
+    font-size: 16px;
+    min-width: 30px;
+    text-align: center;
+}
+
+/* Стили для статусов */
+.status-ready {
+    color: #4CAF50;
+}
+
+.status-pending {
+    color: #FF9800;
+}
+
+.status-processing {
+    color: #2196F3;
+}
+
 /* ===== REFERRAL STYLES ===== */
 .ref-stats {
     display: grid;
@@ -582,6 +739,14 @@ h1 {
         padding: 12px 15px;
         font-size: 14px;
     }
+    
+    .investor-item {
+        padding: 10px;
+    }
+    
+    .withdraw-request-item {
+        padding: 8px 10px;
+    }
 }
 
 /* ===== SCROLLBAR STYLING ===== */
@@ -646,4 +811,45 @@ h1 {
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
+}
+
+/* ===== ДОПОЛНИТЕЛЬНЫЕ АНИМАЦИИ ===== */
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.new-item {
+    animation: slideInFromRight 0.5s ease;
+}
+
+/* ===== БАДЖИ И МЕТКИ ===== */
+.badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: bold;
+    margin-left: 8px;
+}
+
+.badge-new {
+    background: #4CAF50;
+    color: white;
+}
+
+.badge-hot {
+    background: #FF5722;
+    color: white;
+}
+
+.badge-vip {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: black;
 }
