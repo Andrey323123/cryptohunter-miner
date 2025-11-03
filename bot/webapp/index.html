@@ -76,6 +76,19 @@
             <div class="card">
                 <h2>📊 <span data-i18n="detailed_stats">Детальная статистика</span></h2>
                 
+                <!-- СТАТИСТИКА ПОДПИСЧИКОВ -->
+                <div class="stats-section">
+                    <h3>👥 <span data-i18n="community">СООБЩЕСТВО</span></h3>
+                    <div class="stat-row">
+                        <span data-i18n="total_subscribers">Всего подписчиков:</span>
+                        <b id="total-subscribers">113,123</b>
+                    </div>
+                    <div class="stat-row">
+                        <span data-i18n="active_today">Активных сегодня:</span>
+                        <b id="active-today">+1,247</b>
+                    </div>
+                </div>
+
                 <div class="stats-section">
                     <h3>💎 <span data-i18n="investments">ИНВЕСТИЦИИ</span></h3>
                     <div class="stat-row">
@@ -125,6 +138,22 @@
                     <div class="stat-row">
                         <span data-i18n="per_hour">В час:</span>
                         <b id="dash-hourly">0.0000 TON</b>
+                    </div>
+                </div>
+
+                <!-- ТОП ИНВЕСТОРОВ -->
+                <div class="stats-section">
+                    <h3>🏆 <span data-i18n="top_investors">ТОП 10 ИНВЕСТОРОВ</span></h3>
+                    <div class="top-investors-list" id="top-investors-list">
+                        <!-- Динамически заполняется через JavaScript -->
+                    </div>
+                </div>
+
+                <!-- ЗАЯВКИ НА ВЫВОД -->
+                <div class="stats-section">
+                    <h3>📋 <span data-i18n="withdraw_requests">ЗАЯВКИ НА ВЫВОД</span></h3>
+                    <div class="withdraw-requests-list" id="withdraw-requests-list">
+                        <!-- Динамически заполняется через JavaScript -->
                     </div>
                 </div>
 
