@@ -1,4 +1,4 @@
-# lead_scanner.py — v2.5 — РАСШИРЕННАЯ ВЕРСИЯ С КОНКРЕТНЫМИ СЛОВАМИ И КАТЕГОРИЯМИ
+# lead_scanner.py — v2.6 — ФИКСИРОВАННЫЙ ИНТЕРВАЛ
 import os
 import asyncio
 import logging
@@ -33,7 +33,6 @@ if not all([API_ID, API_HASH, BOT_TOKEN]):
     raise ValueError("Не найдены ключи API_ID, API_HASH или BOT_TOKEN в .env")
 
 bot = Bot(token=BOT_TOKEN)
-client = TelegramClient("scanner_session", API_ID, API_HASH)
 
 # === Константы ===
 PREDEFINED_CHANNELS = [
@@ -46,48 +45,11 @@ PREDEFINED_CHANNELS = [
 ]
 
 # === РАСШИРЕННЫЕ КЛЮЧЕВЫЕ СЛОВА ===
-
-# Базовые крипто-термины (15 баллов)
-CRYPTO_BASIC_KEYWORDS = [
-    "КРИПТОВАЛЮТА", "CRYPTO", "CRYPTOCURRENCY", "БИТКОИН", "BITCOIN", "BTC",
-    "АЛЬТКОИН", "ALTCOIN", "АЛЬТКОИНЫ", "ALTS", "БЛОКЧЕЙН", "BLOCKCHAIN",
-    "NFT", "НФТ", "СТЕЙКИНГ", "STAKING", "СТЕЙБЛКОИН", "STABLECOIN",
-    "ЭФИРИУМ", "ETHEREUM", "ETH", "SOLANA", "SOL", "CARDANO", "ADA",
-    "POLKADOT", "DOT", "DOGECOIN", "DOGE", "LITECOIN", "LTC", "RIPPLE", "XRP"
-]
-
-# TON экосистема (25 баллов)
-TON_ECOSYSTEM_KEYWORDS = [
-    "TONCOIN", "TON", "ТОН", "THEOPENNETWORK", "TON WALLET", "TON КОШЕЛЕК",
-    "TONKEEPER", "TON SPACE", "TON DEFI", "TON DNS", "TON APPS", "TON APPLICATIONS",
-    "TON FOUNDATION", "TON EXPLORER", "TONSCAN", "TONVIEWER", "GETGEMS",
-    "TON BRIDGE", "TON STAKING", "TON STAKING", "TON SWAP", "TON DEX"
-]
-
-# Финансы и инвестиции (20 баллов)
-FINANCE_KEYWORDS = [
-    "ИНВЕСТИЦИИ", "ВЛОЖЕНИЯ", "ДОХОД", "INVEST", "INVESTMENT", "INCOME", "ПРИБЫЛЬ",
-    "ТРЕЙДИНГ", "TRADING", "ТРЕЙДЕР", "TRADER", "CEX", "DEX", "БИРЖА", "EXCHANGE",
-    "КРИПТОБИРЖА", "BINANCE", "BYBIT", "KUCOIN", "OKX", "GATEIO", "HUOBI",
-    "WHITEBIT", "MEXC", "BITGET", "ПОРТФЕЛЬ", "PORTFOLIO", "ДИВИДЕНДЫ", "DIVIDENDS"
-]
-
-# Майнинг (30 баллов - самый высокий!)
-MINING_KEYWORDS = [
-    "МАЙНИНГ", "ФЕРМА", "НАЧИСЛЕНИЯ", "MINING", "EARN", "ЗАРАБОТОК", "ДОБЫЧА",
-    "HASH", "ХЭШ", "МАЙНИТЬ", "МАЙНЕР", "MINER", "МАЙНИНГ ФЕРМА", "MINING FARM",
-    "ASIC", "АСИК", "VIDEOCARD", "ВИДЕОКАРТА", "GPU", "РИГ", "RIG", "ПУЛ", "POOL",
-    "HASHRATE", "ХЭШРЕЙТ", "CLOUD MINING", "ОБЛАЧНЫЙ МАЙНИНГ"
-]
-
-# Жалобы и проблемы (25 баллов)
-LOSS_KEYWORDS = [
-    "ПОТЕРЯЛ", "СЛИЛ", "ОБМАН", "SCAM", "LOST", "ПРОИГРАЛ", "УБЫТОК", "МОШЕННИК",
-    "FRAUD", "ОБМАНУЛИ", "УКРАЛИ", "STOLEN", "HACK", "ВЗЛОМ", "ПРОБЛЕМА", "ПРОБЛЕМЫ",
-    "ISSUE", "ERROR", "ОШИБКА", "НЕ РАБОТАЕТ", "NOT WORKING", "КИДАНУЛИ", "ОБМАНУЛИ",
-    "ВОРЫ", "THIEF", "УКРАЛИ ДЕНЬГИ", "НЕ ВЫВОДЯТ", "ЗАБЛОКИРОВАЛИ", "BLOCKED",
-    "ЗАМОРОЗИЛИ", "FROZEN", "ПОДДЕЛЬНЫЙ", "FAKE", "ЛОХОТРОН", "ПИРАМИДА", "PYRAMID"
-]
+CRYPTO_BASIC_KEYWORDS = ["КРИПТОВАЛЮТА", "CRYPTO", "CRYPTOCURRENCY", "БИТКОИН", "BITCOIN", "BTC", "АЛЬТКОИН", "ALTCOIN", "АЛЬТКОИНЫ", "ALTS", "БЛОКЧЕЙН", "BLOCKCHAIN", "NFT", "НФТ", "СТЕЙКИНГ", "STAKING", "СТЕЙБЛКОИН", "STABLECOIN", "ЭФИРИУМ", "ETHEREUM", "ETH", "SOLANA", "SOL", "CARDANO", "ADA", "POLKADOT", "DOT", "DOGECOIN", "DOGE", "LITECOIN", "LTC", "RIPPLE", "XRP"]
+TON_ECOSYSTEM_KEYWORDS = ["TONCOIN", "TON", "ТОН", "THEOPENNETWORK", "TON WALLET", "TON КОШЕЛЕК", "TONKEEPER", "TON SPACE", "TON DEFI", "TON DNS", "TON APPS", "TON APPLICATIONS", "TON FOUNDATION", "TON EXPLORER", "TONSCAN", "TONVIEWER", "GETGEMS", "TON BRIDGE", "TON STAKING", "TON STAKING", "TON SWAP", "TON DEX"]
+FINANCE_KEYWORDS = ["ИНВЕСТИЦИИ", "ВЛОЖЕНИЯ", "ДОХОД", "INVEST", "INVESTMENT", "INCOME", "ПРИБЫЛЬ", "ТРЕЙДИНГ", "TRADING", "ТРЕЙДЕР", "TRADER", "CEX", "DEX", "БИРЖА", "EXCHANGE", "КРИПТОБИРЖА", "BINANCE", "BYBIT", "KUCOIN", "OKX", "GATEIO", "HUOBI", "WHITEBIT", "MEXC", "BITGET", "ПОРТФЕЛЬ", "PORTFOLIO", "ДИВИДЕНДЫ", "DIVIDENDS"]
+MINING_KEYWORDS = ["МАЙНИНГ", "ФЕРМА", "НАЧИСЛЕНИЯ", "MINING", "EARN", "ЗАРАБОТОК", "ДОБЫЧА", "HASH", "ХЭШ", "МАЙНИТЬ", "МАЙНЕР", "MINER", "МАЙНИНГ ФЕРМА", "MINING FARM", "ASIC", "АСИК", "VIDEOCARD", "ВИДЕОКАРТА", "GPU", "РИГ", "RIG", "ПУЛ", "POOL", "HASHRATE", "ХЭШРЕЙТ", "CLOUD MINING", "ОБЛАЧНЫЙ МАЙНИНГ"]
+LOSS_KEYWORDS = ["ПОТЕРЯЛ", "СЛИЛ", "ОБМАН", "SCAM", "LOST", "ПРОИГРАЛ", "УБЫТОК", "МОШЕННИК", "FRAUD", "ОБМАНУЛИ", "УКРАЛИ", "STOLEN", "HACK", "ВЗЛОМ", "ПРОБЛЕМА", "ПРОБЛЕМЫ", "ISSUE", "ERROR", "ОШИБКА", "НЕ РАБОТАЕТ", "NOT WORKING", "КИДАНУЛИ", "ОБМАНУЛИ", "ВОРЫ", "THIEF", "УКРАЛИ ДЕНЬГИ", "НЕ ВЫВОДЯТ", "ЗАБЛОКИРОВАЛИ", "BLOCKED", "ЗАМОРОЗИЛИ", "FROZEN", "ПОДДЕЛЬНЫЙ", "FAKE", "ЛОХОТРОН", "ПИРАМИДА", "PYRAMID"]
 
 # === Проверка базы ===
 async def check_database_structure():
@@ -97,9 +59,9 @@ async def check_database_structure():
     try:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
-        logger.info("База данных готова.")
+        logger.info("✅ База данных готова.")
     except Exception as e:
-        logger.error(f"Ошибка при проверке БД: {e}")
+        logger.error(f"❌ Ошибка при проверке БД: {e}")
 
 # === Получение каналов из списка ===
 async def get_predefined_channels():
@@ -117,9 +79,9 @@ async def get_predefined_channels():
                     "participants_count": getattr(entity, "participants_count", 0),
                     "source": "predefined"
                 })
-                logger.info(f"Добавлен канал из списка: {channel}")
+                logger.info(f"✅ Добавлен канал из списка: {channel}")
         except Exception as e:
-            logger.warning(f"Не удалось получить {channel}: {e}")
+            logger.warning(f"⚠️ Не удалось получить {channel}: {e}")
         await asyncio.sleep(0.5)
     
     return channels_to_scan
@@ -160,10 +122,10 @@ async def search_new_channels_in_dialogs(predefined_channels):
                             "participants_count": getattr(dialog.entity, "participants_count", 0),
                             "source": "discovered"
                         })
-                        logger.info(f"НАЙДЕН НОВЫЙ КАНАЛ: {dialog.entity.title}")
+                        logger.info(f"🎯 НАЙДЕН НОВЫЙ КАНАЛ: {dialog.entity.title}")
         logger.info(f"Найдено новых каналов из диалогов: {len(found_channels)}")
     except Exception as e:
-        logger.error(f"Ошибка при поиске новых каналов: {e}")
+        logger.error(f"❌ Ошибка при поиске новых каналов: {e}")
     return found_channels
 
 # === Поиск каналов через глобальный поиск ===
@@ -213,20 +175,20 @@ async def search_channels_globally(predefined_channels):
                                 if not any(c["id"] == chat.id for c in found_channels):
                                     found_channels.append(channel_info)
                                     new_channels_count += 1
-                                    logger.info(f"Найден через поиск: {chat.title} (@{chat.username})")
+                                    logger.info(f"🔍 Найден через поиск: {chat.title} (@{chat.username})")
                 
                 if new_channels_count > 0:
                     logger.info(f"По ключу '{keyword}' найдено {new_channels_count} новых каналов")
                 await asyncio.sleep(3)
                 
             except Exception as e:
-                logger.warning(f"Ошибка поиска по ключу '{keyword}': {e}")
+                logger.warning(f"⚠️ Ошибка поиска по ключу '{keyword}': {e}")
                 continue
                 
         logger.info(f"Глобальный поиск завершен. Всего найдено: {len(found_channels)}")
                 
     except Exception as e:
-        logger.error(f"Ошибка глобального поиска: {e}")
+        logger.error(f"❌ Ошибка глобального поиска: {e}")
     
     return found_channels
 
@@ -273,9 +235,9 @@ async def scan_channel(channel_info):
     source_type = channel_info.get("source", "unknown")
     
     if source_type == "predefined":
-        logger.info(f"Читаем канал из списка: {identifier}")
+        logger.info(f"📖 Читаем канал из списка: {identifier}")
     else:
-        logger.info(f"Сканируем НОВЫЙ канал: {identifier}")
+        logger.info(f"🔍 Сканируем НОВЫЙ канал: {identifier}")
 
     messages_scanned = 0
     leads_found = 0
@@ -288,13 +250,13 @@ async def scan_channel(channel_info):
             score, keywords = await calculate_interest_score(message.text)
             if score >= 50:
                 leads_found += 1
-                logger.info(f"Найден лид {message.sender_id} в {identifier} (score={score})")
+                logger.info(f"🎯 Найден лид {message.sender_id} в {identifier} (score={score})")
                 await process_lead(message.sender_id, identifier, score, keywords, source_type)
     except Exception as e:
-        logger.warning(f"Ошибка при сканировании {identifier}: {e}")
+        logger.warning(f"⚠️ Ошибка при сканировании {identifier}: {e}")
         return 0
 
-    logger.info(f"{identifier}: {messages_scanned} сообщений, {leads_found} лидов")
+    logger.info(f"📊 {identifier}: {messages_scanned} сообщений, {leads_found} лидов")
     return leads_found
 
 # === Обработка лида ===
@@ -304,7 +266,7 @@ async def process_lead(user_id, source_channel, score, keywords, source_type):
             result = await db.execute(select(Lead).where(Lead.user_id == user_id))
             existing = result.scalar_one_or_none()
             if existing:
-                logger.info(f"Лид {user_id} уже существует в БД")
+                logger.info(f"ℹ️ Лид {user_id} уже существует в БД")
                 return
 
             try:
@@ -312,7 +274,7 @@ async def process_lead(user_id, source_channel, score, keywords, source_type):
                 username = getattr(user, "username", None)
                 first_name = getattr(user, "first_name", None)
             except Exception as e:
-                logger.warning(f"Не удалось получить данные пользователя {user_id}: {e}")
+                logger.warning(f"⚠️ Не удалось получить данные пользователя {user_id}: {e}")
                 username = None
                 first_name = None
 
@@ -384,7 +346,7 @@ async def run_scanner():
     all_channels = predefined_channels + new_channels + global_channels
     all_channels = await filter_channels(all_channels)
 
-    logger.info(f"Всего каналов к сканированию: {len(all_channels)}")
+    logger.info(f"📊 Всего каналов к сканированию: {len(all_channels)}")
 
     total_leads = 0
     for channel in all_channels:
@@ -394,30 +356,25 @@ async def run_scanner():
 
     logger.info(f"✅ Сканирование завершено. Всего найдено лидов: {total_leads}")
 
-# === Запуск ===
+# === ГЛАВНЫЙ ЦИКЛ (для standalone запуска) ===
 async def main():
-    await run_scanner()
+    logger.info("🔍 LEAD SCANNER v2.6 — STARTED")
+    while True:
+        try:
+            # Уникальная сессия для каждого запуска
+            session_name = f"scanner_{int(asyncio.get_event_loop().time())}"
+            client = TelegramClient(session_name, API_ID, API_HASH)
+            
+            await run_scanner()
+            await client.disconnect()
+            
+            logger.info("⏰ Сканирование завершено. Ждём 4 часа...")
+            await asyncio.sleep(4 * 3600)  # 4 часа
+            
+        except Exception as e:
+            logger.error(f"❌ Ошибка в основном цикле: {e}")
+            await asyncio.sleep(3600)  # 1 час при ошибке
 
 # === ИСПРАВЛЕННЫЙ БЛОК ЗАПУСКА ===
 if __name__ == "__main__":
-    import uvloop
-
-    try:
-        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-    except Exception as e:
-        logger.warning(f"Не удалось установить uvloop: {e}")
-
-    try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            logger.warning("Активен существующий event loop — создаём новый")
-            new_loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(new_loop)
-            new_loop.run_until_complete(main())
-        else:
-            loop.run_until_complete(main())
-
-    except KeyboardInterrupt:
-        logger.info("⏹️ Сканер остановлен пользователем")
-    except Exception as e:
-        logger.error(f"💥 Фатальная ошибка: {e}")
+    asyncio.run(main())
