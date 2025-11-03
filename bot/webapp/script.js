@@ -44,6 +44,16 @@ const translations = {
         "not_ready": "Не готово",
         "min_withdraw": "Минимум: 1 TON (1.00 TON осталось)",
         
+        // Новые элементы
+        "community": "СООБЩЕСТВО",
+        "total_subscribers": "Всего подписчиков:",
+        "active_today": "Активных сегодня:",
+        "top_investors": "ТОП 10 ИНВЕСТОРОВ",
+        "withdraw_requests": "ЗАЯВКИ НА ВЫВОД",
+        "wallet": "Кошелек",
+        "amount_ton": "Сумма TON",
+        "status": "Статус",
+        
         // Реферальная программа
         "direct_referrals": "прямых рефералов",
         "level_2": "2-й уровень",
@@ -126,6 +136,16 @@ const translations = {
         "not_ready": "Not ready",
         "min_withdraw": "Minimum: 1 TON (1.00 TON left)",
         
+        // New elements
+        "community": "COMMUNITY",
+        "total_subscribers": "Total subscribers:",
+        "active_today": "Active today:",
+        "top_investors": "TOP 10 INVESTORS",
+        "withdraw_requests": "WITHDRAWAL REQUESTS",
+        "wallet": "Wallet",
+        "amount_ton": "Amount TON",
+        "status": "Status",
+        
         // Referral program
         "direct_referrals": "direct referrals",
         "level_2": "Level 2",
@@ -188,6 +208,121 @@ let currentUserData = null;
 let currentDepositId = null;
 let paymentCheckInterval = null;
 
+// === ДАННЫЕ ДЛЯ НОВЫХ ФУНКЦИЙ ===
+let topInvestors = [
+    { position: 1, amount: 21435, wallet: "EQD...4b3c", trophy: "🥇" },
+    { position: 2, amount: 19756, wallet: "UQD...7a9d", trophy: "🥈" },
+    { position: 3, amount: 17659, wallet: "kQD...2f8e", trophy: "🥉" },
+    { position: 4, amount: 16543, wallet: "EQD...9c1a", trophy: "4" },
+    { position: 5, amount: 15432, wallet: "UQD...8b2f", trophy: "5" },
+    { position: 6, amount: 14321, wallet: "kQD...7c3e", trophy: "6" },
+    { position: 7, amount: 13210, wallet: "EQD...6d4a", trophy: "7" },
+    { position: 8, amount: 12198, wallet: "UQD...5e5b", trophy: "8" },
+    { position: 9, amount: 11087, wallet: "kQD...4f6c", trophy: "9" },
+    { position: 10, amount: 10543, wallet: "EQD...3a7d", trophy: "10" }
+];
+
+let withdrawRequests = [
+    { wallet: "EQD...a1b2", amount: 15.5, status: "ready" },
+    { wallet: "UQD...c3d4", amount: 23.1, status: "ready" },
+    { wallet: "kQD...e5f6", amount: 8.7, status: "ready" },
+    { wallet: "EQD...g7h8", amount: 45.2, status: "ready" },
+    { wallet: "UQD...i9j0", amount: 12.8, status: "ready" }
+];
+
+let subscribersData = {
+    total: 113123,
+    dailyChange: 1247
+};
+
+// === ФУНКЦИИ ДЛЯ НОВЫХ ЭЛЕМЕНТОВ ===
+
+// Обновление статистики подписчиков
+function updateSubscribersStats() {
+    const baseSubscribers = 113123;
+    const randomChange = Math.floor(Math.random() * 2000) - 1000; // ±1000
+    const newTotal = baseSubscribers + randomChange;
+    const dailyChange = Math.floor(Math.random() * 500) + 800; // 800-1300
+    
+    subscribersData.total = newTotal;
+    subscribersData.dailyChange = dailyChange;
+    
+    const totalElement = document.getElementById('total-subscribers');
+    const activeElement = document.getElementById('active-today');
+    
+    if (totalElement) totalElement.textContent = newTotal.toLocaleString();
+    if (activeElement) activeElement.textContent = `+${dailyChange.toLocaleString()}`;
+}
+
+// Обновление топа инвесторов
+function updateTopInvestors() {
+    const list = document.getElementById('top-investors-list');
+    if (!list) return;
+    
+    list.innerHTML = '';
+    
+    topInvestors.forEach(investor => {
+        const investorElement = document.createElement('div');
+        investorElement.className = 'investor-item';
+        investorElement.innerHTML = `
+            <div class="investor-rank">${investor.trophy}</div>
+            <div class="investor-info">
+                <div class="investor-wallet">${investor.wallet}</div>
+                <div class="investor-amount">${investor.amount.toLocaleString()} TON</div>
+            </div>
+        `;
+        list.appendChild(investorElement);
+    });
+}
+
+// Обновление заявок на вывод
+function updateWithdrawRequests() {
+    const list = document.getElementById('withdraw-requests-list');
+    if (!list) return;
+    
+    list.innerHTML = '';
+    
+    withdrawRequests.forEach(request => {
+        const requestElement = document.createElement('div');
+        requestElement.className = 'withdraw-request-item';
+        const statusIcon = request.status === 'ready' ? '✅' : '⏳';
+        requestElement.innerHTML = `
+            <div class="request-wallet">${request.wallet}</div>
+            <div class="request-amount">${request.amount} TON</div>
+            <div class="request-status">${statusIcon}</div>
+        `;
+        list.appendChild(requestElement);
+    });
+}
+
+// Добавление новой заявки на вывод
+function addWithdrawRequest(wallet, amount) {
+    const shortWallet = wallet.substring(0, 6) + '...' + wallet.substring(wallet.length - 4);
+    
+    withdrawRequests.unshift({
+        wallet: shortWallet,
+        amount: amount,
+        status: 'ready'
+    });
+    
+    // Ограничиваем список 10 элементами
+    if (withdrawRequests.length > 10) {
+        withdrawRequests = withdrawRequests.slice(0, 10);
+    }
+    
+    updateWithdrawRequests();
+}
+
+// Обновление топа инвесторов с рандомными изменениями
+function updateTopInvestorsData() {
+    topInvestors = topInvestors.map(investor => ({
+        ...investor,
+        amount: Math.max(10000, investor.amount + Math.floor(Math.random() * 2000 - 1000))
+    })).sort((a, b) => b.amount - a.amount);
+    
+    updateTopInvestors();
+}
+
 // === ПОЛУЧИТЬ initData ===
 function getInitData() {
     return tg?.initData || '';
@@ -248,6 +383,10 @@ function showSection(id) {
         loadUserData();
     } else if (id === 'dashboard') {
         loadDashboardData();
+        // Обновляем данные для дашборда
+        updateSubscribersStats();
+        updateTopInvestors();
+        updateWithdrawRequests();
     } else if (id === 'referral') {
         loadReferralData();
     } else if (id === 'withdraw') {
@@ -654,6 +793,9 @@ window.withdraw = async function() {
             }
             showNotification('withdraw_success', 'success');
             
+            // Добавляем заявку в список
+            addWithdrawRequest(addr, amount);
+            
             document.getElementById('withdraw-address').value = '';
             document.getElementById('withdraw-amount').value = '';
             
@@ -716,12 +858,23 @@ document.addEventListener('DOMContentLoaded', function() {
         copyPaymentUrlBtn.addEventListener('click', copyPaymentUrl);
     }
     
+    // Инициализация новых данных
+    updateSubscribersStats();
+    updateTopInvestors();
+    updateWithdrawRequests();
+    
     // Показываем главный экран и загружаем данные
     showSection('stats');
     loadUserData();
     
     // Автообновление каждые 30 секунд
     setInterval(loadUserData, 30000);
+    
+    // Обновление статистики подписчиков каждые 24 часа
+    setInterval(updateSubscribersStats, 24 * 60 * 60 * 1000);
+    
+    // Обновление топа инвесторов каждые 24 часа
+    setInterval(updateTopInvestorsData, 24 * 60 * 60 * 1000);
 });
 
 // Глобальные функции
