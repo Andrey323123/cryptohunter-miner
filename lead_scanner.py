@@ -1,4 +1,4 @@
-# lead_scanner.py — v2.6 — ФИКСИРОВАННЫЙ ИНТЕРВАЛ
+# lead_scanner.py — v2.7 — ПРИНИМАЕТ КЛИЕНТ
 import os
 import asyncio
 import logging
@@ -64,7 +64,7 @@ async def check_database_structure():
         logger.error(f"❌ Ошибка при проверке БД: {e}")
 
 # === Получение каналов из списка ===
-async def get_predefined_channels():
+async def get_predefined_channels(client):
     channels_to_scan = []
     logger.info("Получаем каналы из списка для сканирования...")
     
@@ -87,7 +87,7 @@ async def get_predefined_channels():
     return channels_to_scan
 
 # === Поиск новых каналов в диалогах ===
-async def search_new_channels_in_dialogs(predefined_channels):
+async def search_new_channels_in_dialogs(client, predefined_channels):
     found_channels = []
     predefined_usernames = {ch["username"].lower() for ch in predefined_channels if ch["username"]}
     predefined_titles = {ch["title"].lower() for ch in predefined_channels}
@@ -129,7 +129,7 @@ async def search_new_channels_in_dialogs(predefined_channels):
     return found_channels
 
 # === Поиск каналов через глобальный поиск ===
-async def search_channels_globally(predefined_channels):
+async def search_channels_globally(client, predefined_channels):
     found_channels = []
     predefined_usernames = {ch["username"].lower() for ch in predefined_channels if ch["username"]}
     
@@ -230,7 +230,7 @@ async def calculate_interest_score(text: str):
     return score, found_keywords
 
 # === Сканирование канала ===
-async def scan_channel(channel_info):
+async def scan_channel(client, channel_info):
     identifier = channel_info["username"] or channel_info["title"]
     source_type = channel_info.get("source", "unknown")
     
@@ -251,7 +251,7 @@ async def scan_channel(channel_info):
             if score >= 50:
                 leads_found += 1
                 logger.info(f"🎯 Найден лид {message.sender_id} в {identifier} (score={score})")
-                await process_lead(message.sender_id, identifier, score, keywords, source_type)
+                await process_lead(client, message.sender_id, identifier, score, keywords, source_type)
     except Exception as e:
         logger.warning(f"⚠️ Ошибка при сканировании {identifier}: {e}")
         return 0
@@ -260,7 +260,7 @@ async def scan_channel(channel_info):
     return leads_found
 
 # === Обработка лида ===
-async def process_lead(user_id, source_channel, score, keywords, source_type):
+async def process_lead(client, user_id, source_channel, score, keywords, source_type):
     try:
         async with AsyncSessionLocal() as db:
             result = await db.execute(select(Lead).where(Lead.user_id == user_id))
@@ -333,15 +333,15 @@ async def filter_channels(channels):
     return filtered_channels
 
 # === Основной процесс ===
-async def run_scanner():
-    await client.start(phone=PHONE)
+async def run_scanner(client):
+    """Принимает готовый Telethon клиент"""
     logger.info("🚀 Сканер лидов запущен")
 
     await check_database_structure()
 
-    predefined_channels = await get_predefined_channels()
-    new_channels = await search_new_channels_in_dialogs(predefined_channels)
-    global_channels = await search_channels_globally(predefined_channels)
+    predefined_channels = await get_predefined_channels(client)
+    new_channels = await search_new_channels_in_dialogs(client, predefined_channels)
+    global_channels = await search_channels_globally(client, predefined_channels)
 
     all_channels = predefined_channels + new_channels + global_channels
     all_channels = await filter_channels(all_channels)
@@ -350,7 +350,7 @@ async def run_scanner():
 
     total_leads = 0
     for channel in all_channels:
-        leads = await scan_channel(channel)
+        leads = await scan_channel(client, channel)
         total_leads += leads
         await asyncio.sleep(2)
 
@@ -358,14 +358,15 @@ async def run_scanner():
 
 # === ГЛАВНЫЙ ЦИКЛ (для standalone запуска) ===
 async def main():
-    logger.info("🔍 LEAD SCANNER v2.6 — STARTED")
+    logger.info("🔍 LEAD SCANNER v2.7 — STARTED")
+    
     while True:
         try:
-            # Уникальная сессия для каждого запуска
-            session_name = f"scanner_{int(asyncio.get_event_loop().time())}"
-            client = TelegramClient(session_name, API_ID, API_HASH)
+            # Создаем клиент для standalone режима
+            client = TelegramClient("scanner_session", API_ID, API_HASH)
+            await client.start(phone=PHONE)
             
-            await run_scanner()
+            await run_scanner(client)
             await client.disconnect()
             
             logger.info("⏰ Сканирование завершено. Ждём 4 часа...")
