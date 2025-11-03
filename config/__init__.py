@@ -11,7 +11,7 @@ BOT_USERNAME = os.getenv("BOT_USERNAME")  # ✅ добавлено для /api/r
 API_ID = int(os.getenv("API_ID", "0"))
 API_HASH = os.getenv("API_HASH")
 PHONE = os.getenv("PHONE")
-ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
+ADMIN_ID = 925572932
 
 # === TON ===
 TONKEEPER_MNEMONIC = os.getenv("TONKEEPER_MNEMONIC")
