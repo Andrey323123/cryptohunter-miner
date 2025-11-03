@@ -1,4 +1,4 @@
-# main.py — v2.2 — ФИКС ИМПОРТОВ И HTTPS
+# main.py — v2.3 — ФИКС TELEGRAM АВТОРИЗАЦИИ
 import os
 import asyncio
 import logging
@@ -25,7 +25,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 # === КРИТИЧЕСКИЕ ИМПОРТЫ ДЛЯ TELEGRAM ===
 from telethon import TelegramClient
-from telethon.errors import FloodWaitError, AuthKeyError
+from telethon.errors import FloodWaitError, AuthKeyError, SessionPasswordNeededError
 
 # === CONFIG ===
 from config import BOT_TOKEN, BOT_USERNAME, TONKEEPER_API_KEY
@@ -79,16 +79,33 @@ async def create_safe_telethon_client(session_name, api_id, api_hash, phone=None
             if os.path.exists(session_file):
                 os.remove(session_file)
     
-    # Создаем новую сессию
+    # Создаем новую сессию с автоматической авторизацией
     logger.info(f"🆕 Создаем новую сессию: {session_name}")
     client = TelegramClient(session_name, api_id, api_hash)
     
-    if phone:
-        await client.start(phone=phone)
-    else:
-        await client.start()
+    try:
+        # Пытаемся авторизоваться без интерактивного ввода
+        if phone:
+            await client.start(phone=lambda: phone, code_callback=lambda: None)
+        else:
+            # Если нет телефона, пробуем бот-токен
+            await client.start(bot_token=BOT_TOKEN)
         
-    return client
+        logger.info(f"✅ Сессия {session_name} успешно создана")
+        return client
+        
+    except SessionPasswordNeededError:
+        logger.error("❌ Требуется двухфакторная аутентификация. Пропускаем авторизацию.")
+        await client.disconnect()
+        raise Exception("2FA required - cannot authorize in non-interactive environment")
+        
+    except Exception as e:
+        logger.error(f"❌ Не удалось создать сессию {session_name}: {e}")
+        
+        # Если не удалось авторизоваться, пропускаем Telethon функционал
+        logger.warning("⏸️ Пропускаем Telethon функционал из-за ошибки авторизации")
+        await client.disconnect()
+        raise Exception(f"Telethon authorization failed: {e}")
 
 # === FastAPI ===
 app = FastAPI(title="CryptoHunter Miner")
@@ -518,90 +535,52 @@ async def start_bot_background():
             logger.error(f"❌ Ошибка бота: {e}")
             await asyncio.sleep(15)
 
-# === Lead Scanner ===
+# === Lead Scanner (ВРЕМЕННО ОТКЛЮЧЕН) ===
 async def run_lead_scanner():
-    """Запуск сканера лидов"""
+    """Запуск сканера лидов - временно отключен"""
     try:
-        logger.info("🔍 ЗАПУСК LEAD SCANNER...")
-
-        from lead_scanner import run_scanner
-
-        API_ID = int(os.getenv("API_ID"))
-        API_HASH = os.getenv("API_HASH")
-        PHONE = os.getenv("PHONE")
-
-        # Используем безопасное создание клиента
-        client = await create_safe_telethon_client("scanner_session", API_ID, API_HASH, PHONE)
-        await run_scanner(client)
-        await client.disconnect()
-
-        logger.info("✅ Сканирование завершено")
+        logger.info("🔍 LEAD SCANNER ВРЕМЕННО ОТКЛЮЧЕН")
+        logger.info("ℹ️ Функция сканирования отключена из-за проблем с авторизацией Telethon")
+        # Временное отключение до решения проблем с авторизацией
+        await asyncio.sleep(5)
         return True
-
+        
     except Exception as e:
         logger.error(f"❌ Lead Scanner упал: {e}")
         return False
 
-# === Outreach Sender ===
+# === Outreach Sender (ВРЕМЕННО ОТКЛЮЧЕН) ===
 async def run_outreach_sender():
-    """Запуск рассылки"""
+    """Запуск рассылки - временно отключен"""
     try:
-        logger.info("📨 ЗАПУСК OUTREACH SENDER...")
-
-        from outreach_sender import safe_send
-
-        API_ID = int(os.getenv("API_ID"))
-        API_HASH = os.getenv("API_HASH")
-
-        # Используем безопасное создание клиента
-        client = await create_safe_telethon_client("scanner_session", API_ID, API_HASH)
-        await safe_send(client)  # передаем клиент как аргумент
-        await client.disconnect()
-
-        logger.info("✅ Рассылка завершена")
+        logger.info("📨 OUTREACH SENDER ВРЕМЕННО ОТКЛЮЧЕН")
+        logger.info("ℹ️ Функция рассылки отключена из-за проблем с авторизацией Telethon")
+        # Временное отключение до решения проблем с авторизацией
+        await asyncio.sleep(5)
         return True
-
+        
     except Exception as e:
         logger.error(f"❌ Outreach Sender упал: {e}")
         return False
 
-# === ОСНОВНОЙ ЦИКЛ: РАССЫЛКА ПЕРВАЯ → СКАНИРОВАНИЕ ===
+# === ОСНОВНОЙ ЦИКЛ (УПРОЩЕННЫЙ) ===
 async def main_worker():
-    current_service = "outreach"
-
+    """Упрощенный главный цикл без Telethon"""
+    logger.info("🔄 ЗАПУСК УПРОЩЕННОГО ЦИКЛА (без Telethon)")
+    
     while True:
         try:
-            if current_service == "outreach":
-                logger.info("🔄 ЦИКЛ: Запускаем РАССЫЛКУ")
-                success = await run_outreach_sender()
-                if success:
-                    logger.info("⏰ Ждём 4 часа перед сканированием...")
-                    await asyncio.sleep(4 * 3600)
-                else:
-                    logger.info("⏰ Ошибка рассылки, ждём 1 час...")
-                    await asyncio.sleep(3600)
-
-                current_service = "scanner"
-
-            else:
-                logger.info("🔄 ЦИКЛ: Запускаем СКАНИРОВАНИЕ")
-                success = await run_lead_scanner()
-                if success:
-                    logger.info("⏰ Ждём 4 часа перед рассылкой...")
-                    await asyncio.sleep(4 * 3600)
-                else:
-                    logger.info("⏰ Ошибка сканирования, ждём 1 час...")
-                    await asyncio.sleep(3600)
-
-                current_service = "outreach"
-
+            # Просто ждем и логируем статус
+            logger.info("💤 Основные функции работают (бот, API, начисления)")
+            await asyncio.sleep(3600)  # Проверяем каждый час
+            
         except Exception as e:
-            logger.error(f"💥 Критическая ошибка в главном цикле: {e}")
+            logger.error(f"💥 Ошибка в главном цикле: {e}")
             await asyncio.sleep(3600)
 
 # === Главная функция ===
 async def main():
-    logger.info("🚀 ЗАПУСК CRYPTOHUNTER MINER v2.2 - ФИКС ИМПОРТОВ И HTTPS")
+    logger.info("🚀 ЗАПУСК CRYPTOHUNTER MINER v2.3 - УПРОЩЕННАЯ ВЕРСИЯ")
 
     await create_tables()
 
