@@ -1,7 +1,7 @@
-# bot/handlers.py — v4.0: ТОЛЬКО /start + УМНЫЕ НАПОМИНАНИЯ
+# bot/handlers.py — v4.1: ФИКС HTTPS ДЛЯ WEB APP
 from aiogram import Router, F
 from aiogram.filters import Command
-from aiogram.types import Message
+from aiogram.types import Message, WebAppInfo
 from aiogram.fsm.context import FSMContext
 from core.models import User, Referral
 from core.database import AsyncSessionLocal
@@ -12,6 +12,9 @@ import asyncio
 import re
 
 router = Router()
+
+# === HTTPS URL ДЛЯ WEB APP ===
+WEBAPP_URL = "https://cryptohunter-miner-production.up.railway.app"
 
 def extract_referrer_id(payload: str) -> int | None:
     """Извлекает ID реферера из payload"""
