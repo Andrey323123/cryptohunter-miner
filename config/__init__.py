@@ -20,7 +20,7 @@ TONCENTER_API_KEY = os.getenv("TONCENTER_API_KEY")  # ключ для TonCenter
 TONCENTER_BASE_URL = os.getenv("TONCENTER_BASE_URL", "https://toncenter.com/api/v3")
 
 # === ВЕБ ===
-WEBAPP_URL = os.getenv("WEBAPP_URL", "https://cryptohunter-miner.up.railway.app")
+WEBAPP_URL = os.getenv("WEBAPP_URL", "cryptohunter-miner-production.up.railway.app")
 
 # === DEBUG ===
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
