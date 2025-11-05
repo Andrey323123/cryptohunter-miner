@@ -7,7 +7,7 @@ def main_menu():
     """
     btn_webapp = KeyboardButton(
         text="Открыть майнер",
-        web_app=WebAppInfo(url=WEBAPP_URL)
+        web_app=WebAppInfo(url=f"https://{WEBAPP_URL}")
     )
     kb = ReplyKeyboardMarkup(
         keyboard=[[btn_webapp]],
