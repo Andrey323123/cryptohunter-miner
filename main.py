@@ -1,5 +1,4 @@
-# main.py — v3.7 — ПОЛНЫЙ, ИСПРАВЛЕННЫЙ, РАБОЧИЙ
-# ИСПОЛЬЗУЕТ: API_ID, API_HASH, PHONE → outreach_session.session
+# main.py — v4.1 — СКАНЕР И РАССЫЛКА ЗАКОММЕНТИРОВАНЫ (ПОКА НЕ НУЖНЫ)
 import os
 import asyncio
 import logging
@@ -61,9 +60,8 @@ async def root():
 async def health():
     return {
         "status": "ok",
-        "session": "outreach_session.session",
-        "scanner": "active",
-        "outreach": "active",
+        "scanner": "disabled (закомментирован)",
+        "outreach": "disabled (закомментирован)",
         "referrals": "enabled"
     }
 
@@ -291,23 +289,21 @@ async def api_referral(request: Request):
             "income": float(total_income)
         }
 
+# === ЗАКОММЕНТИРОВАННЫЕ ФУНКЦИИ (НЕ РАБОТАЮТ) ===
+"""
 # === ТОЛЬКО outreach_session.session — ЧИТАЕТ API_ID, API_HASH, PHONE ===
 async def create_client():
-    # ЧИТАЕМ ТВОИ ПЕРЕМЕННЫЕ
     api_id = os.getenv("API_ID")
     api_hash = os.getenv("API_HASH")
     phone = os.getenv("PHONE")
-    
+   
     if not all([api_id, api_hash, phone]):
         logger.error("Нет API_ID / API_HASH / PHONE в .env")
         return None
-    
+   
     api_id = int(api_id)
-
-    # СЕССИЯ: outreach_session.session
     client = TelegramClient("outreach_session", api_id, api_hash)
     session_file = "outreach_session.session"
-
     if os.path.exists(session_file):
         try:
             await client.connect()
@@ -321,7 +317,6 @@ async def create_client():
             logger.warning(f"Сессия повреждена: {e}")
             try: os.remove(session_file)
             except: pass
-
     logger.info(f"Авторизация: {phone}")
     try:
         await client.start(phone=lambda: phone)
@@ -334,7 +329,7 @@ async def create_client():
         logger.error(f"Ошибка авторизации: {e}")
         return None
 
-# === LEAD SCANNER ===
+# === LEAD SCANNER (ВЫКЛЮЧЕН) ===
 async def run_lead_scanner():
     while True:
         client = await create_client()
@@ -353,7 +348,7 @@ async def run_lead_scanner():
             await client.disconnect()
             await asyncio.sleep(3600)
 
-# === OUTREACH SENDER ===
+# === OUTREACH SENDER (ВЫКЛЮЧЕН) ===
 async def run_outreach_sender():
     while True:
         client = await create_client()
@@ -371,8 +366,9 @@ async def run_outreach_sender():
             logger.error(f"OUTREACH упал: {e}")
             await client.disconnect()
             await asyncio.sleep(3600)
+"""
 
-# === БОТ ===
+# === БОТ (РАБОТАЕТ) ===
 async def start_bot():
     while True:
         try:
@@ -386,7 +382,7 @@ async def start_bot():
             logger.error(f"БОТ упал: {e}")
             await asyncio.sleep(15)
 
-# === НАЧИСЛЕНИЯ ===
+# === НАЧИСЛЕНИЯ (РАБОТАЮТ) ===
 async def hourly_accrual():
     try:
         async with AsyncSessionLocal() as db:
@@ -427,14 +423,14 @@ async def serve_api():
     logger.info(f"API: запуск на порту {port}")
     await server.serve()
 
-# === ГЛАВНЫЙ ЦИКЛ ===
+# === ГЛАВНЫЙ ЦИКЛ — ТОЛЬКО БОТ, API, НАЧИСЛЕНИЯ ===
 async def main():
-    logger.info("CRYPTOHUNTER v3.7 — ЗАПУСК НА outreach_session.session")
+    logger.info("CRYPTOHUNTER v4.1 — СКАНЕР И РАССЫЛКА ВЫКЛЮЧЕНЫ")
     await init_db()
     await asyncio.gather(
         start_bot(),
-        run_lead_scanner(),
-        run_outreach_sender(),
+        # run_lead_scanner(),     # ← ЗАКОММЕНТИРОВАНО
+        # run_outreach_sender(),  # ← ЗАКОММЕНТИРОВАНО
         scheduler(),
         serve_api()
     )
