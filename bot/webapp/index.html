@@ -17,11 +17,11 @@
                 <button id="lang-en" class="lang-btn" onclick="changeLanguage('en')">ENG</button>
             </div>
         </div>
-       
+      
         <!-- ГЛАВНЫЙ ЭКРАН -->
         <div id="stats" class="section active">
             <img src="/webapp/assets/mining.gif" alt="Mining" class="mining-gif">
-           
+          
             <div class="top-actions">
                 <button onclick="showSection('invest')" class="action-btn invest">
                     <img src="/webapp/assets/deposit.png" alt="Инвестировать" style="width: 24px; height: 24px;">
@@ -32,13 +32,13 @@
                     <span data-i18n="withdraw">Вывод</span>
                 </button>
             </div>
-           
+          
             <div class="balance-card">
                 <p data-i18n="your_balance">ВАШ БАЛАНС</p>
                 <h2 id="balance">0.0000</h2>
                 <p>TON</p>
             </div>
-           
+          
             <div class="stats-grid">
                 <div class="stat">
                     <p data-i18n="invested">Инвестировано</p>
@@ -53,7 +53,7 @@
                     <b id="speed">100%</b>
                 </div>
             </div>
-           
+          
             <div class="nav-buttons">
                 <button onclick="showSection('dashboard')" class="nav-btn">
                     <img src="/webapp/assets/stats.png" alt="Статистика" style="width: 18px; height: 18px;">
@@ -64,13 +64,18 @@
                     <span data-i18n="referral_program">Реферальная программа</span>
                 </button>
             </div>
+
+            <!-- КНОПКА ОБНОВИТЬ -->
+            <button id="refresh-btn" class="btn big-btn" style="margin: 20px auto; display: block; background: #4CAF50;" onclick="refresh()">
+                <span data-i18n="refresh">Обновить</span>
+            </button>
         </div>
 
         <!-- ДЕТАЛЬНАЯ СТАТИСТИКА -->
         <div id="dashboard" class="section">
             <div class="card">
                 <h2>Детальная статистика</h2>
-               
+              
                 <div class="stats-section">
                     <h3>СООБЩЕСТВО</h3>
                     <div class="stat-row">
@@ -98,7 +103,7 @@
                     </div>
                     <div class="stat-row">
                         <span data-i18n="month">Месяц:</span>
-                        <b id="dash-monthly-inv">0.00 TON</b>
+                        <b id="dash-monthly-inv">0.00 TON</b> <!-- ИСПРАВЛЕНО: было dash-monthly-iv -->
                     </div>
                 </div>
                 <div class="stats-section">
@@ -149,15 +154,15 @@
                     </div>
                 </div>
             </div>
-           
-            <button onclick="showSection('stats')" class="btn back">Назад</button>
+          
+            <button onclick="showSection('stats')" class="btn back" data-i18n="back">Назад</button>
         </div>
 
         <!-- РЕФЕРАЛЬНАЯ ПРОГРАММА -->
         <div id="referral" class="section">
             <div class="card">
                 <h2>Реферальная программа</h2>
-               
+              
                 <div class="ref-stats">
                     <div class="ref-stat">
                         <div class="ref-stat-value" id="ref-direct">0</div>
@@ -175,81 +180,88 @@
                 <div class="ref-link-container">
                     <p data-i18n="your_referral_link">Ваша реферальная ссылка:</p>
                     <div class="ref-link-box" id="ref-link">https://t.me/cruptos023bot?start=ref_123</div>
-                    <button onclick="copyLink()" class="btn copy-btn">Скопировать ссылку</button>
+                    <button onclick="copyLink()" class="btn copy-btn" data-i18n="copy_link">Скопировать ссылку</button>
                 </div>
             </div>
-           
-            <button onclick="showSection('stats')" class="btn back">Назад</button>
+          
+            <button onclick="showSection('stats')" class="btn back" data-i18n="back">Назад</button>
         </div>
 
         <!-- ИНВЕСТИРОВАНИЕ -->
         <div id="invest" class="section">
             <div class="card">
-                <h2>Инвестирование</h2>
-               
+                <h2 data-i18n="investing">Инвестирование</h2>
+              
                 <div class="input-group">
                     <label data-i18n="investment_amount">Сумма инвестиции (TON):</label>
-                    <input type="number" id="invest-amount" class="input-field" 
+                    <input type="number" id="invest-amount" class="input-field"
                            data-i18n-placeholder="min_ton" placeholder="Минимум 1 TON" min="1">
                 </div>
-               
-                <button onclick="createDeposit()" class="btn big-btn">
+              
+                <button onclick="createDeposit()" class="btn big-btn" data-i18n="generate_qr">
                     Сгенерировать QR для оплаты
                 </button>
-               
+              
                 <div id="qr-section" style="display:none; text-align:center; margin-top:20px;">
                   <p data-i18n="scan_qr">Отсканируйте QR-код для оплаты:</p>
-                  <img id="qr-img" alt="QR Code" width="220" 
+                  <img id="qr-img" alt="QR Code" width="220"
                        style="border:1px solid #ccc; border-radius:12px; padding:6px;">
                   <p style="margin-top:10px;" data-i18n="ton_address">Адрес TON:</p>
-                  <p id="qr-address" style="font-size:0.9em; word-break:break-all; color:#555;"></p>
-                  <button id="copyAddressBtn" style="margin-top:8px; padding:5px 10px;" 
+                  <p id="qr-address" style="font-size:0.9em; word-break:break-all; color:#555;">—</p>
+                  <button id="copyAddressBtn" style="margin-top:8px; padding:5px 10px;"
                           data-i18n="copy_address">Скопировать адрес</button>
+
+                  <!-- КНОПКА РУЧНОЙ ПРОВЕРКИ -->
+                  <button id="checkPaymentBtn" 
+                          style="margin-top:15px; background:#2196F3; display:none;" 
+                          class="btn big-btn">
+                      Проверить оплату
+                  </button>
                 </div>
-               
+              
                 <div class="calculator">
-                    <h3>Калькулятор доходности</h3>
+                    <h3 data-i18n="profit_calculator">Калькулятор доходности</h3>
                     <div class="input-group">
                         <label data-i18n="amount_for_calc">Сумма для расчета:</label>
-                        <input type="number" id="calc-amount" class="input-field" 
+                        <input type="number" id="calc-amount" class="input-field"
                                data-i18n-placeholder="enter_amount" placeholder="Введите сумму" min="1">
                     </div>
-                    <button onclick="calculate()" class="btn">Рассчитать доходность</button>
-                   
+                    <button onclick="calculate()" class="btn" data-i18n="calculate_profit">Рассчитать доходность</button>
+                  
                     <div class="calc-results" id="calc-result"></div>
                 </div>
             </div>
-           
-            <button onclick="showSection('stats')" class="btn back">Назад</button>
+          
+            <button onclick="showSection('stats')" class="btn back" data-i18n="back">Назад</button>
         </div>
 
         <!-- ВЫВОД -->
         <div id="withdraw" class="section">
             <div class="card">
-                <h2>Вывод средств</h2>
-               
+                <h2 data-i18n="withdraw_funds">Вывод средств</h2>
+              
                 <div class="balance-info">
                     <p data-i18n="available_for_withdraw">Доступно для вывода: <b id="withdraw-available">0.0000</b> TON</p>
                 </div>
-               
+              
                 <div class="input-group">
                     <label data-i18n="ton_wallet_address">Адрес TON кошелька:</label>
-                    <input type="text" id="withdraw-address" class="input-field" 
+                    <input type="text" id="withdraw-address" class="input-field"
                            data-i18n-placeholder="wallet_placeholder" placeholder="Начинается с kQ, UQ или EQ">
                 </div>
-               
+              
                 <div class="input-group">
                     <label data-i18n="withdraw_amount">Сумма вывода (TON):</label>
-                    <input type="number" id="withdraw-amount" class="input-field" 
+                    <input type="number" id="withdraw-amount" class="input-field"
                            data-i18n-placeholder="min_ton" placeholder="Минимум 1 TON" min="1">
                 </div>
-               
+              
                 <button onclick="withdraw()" class="btn big-btn">Вывести средства</button>
-               
+              
                 <div id="withdraw-status" class="status-message"></div>
             </div>
-           
-            <button onclick="showSection('stats')" class="btn back">Назад</button>
+          
+            <button onclick="showSection('stats')" class="btn back" data-i18n="back">Назад</button>
         </div>
     </div>
 
