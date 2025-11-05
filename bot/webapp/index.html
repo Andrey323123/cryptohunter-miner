@@ -74,10 +74,10 @@
         <!-- ДЕТАЛЬНАЯ СТАТИСТИКА -->
         <div id="dashboard" class="section">
             <div class="card">
-                <h2>Детальная статистика</h2>
+                <h2 data-i18n="detailed_stats">Детальная статистика</h2>
               
                 <div class="stats-section">
-                    <h3>СООБЩЕСТВО</h3>
+                    <h3 data-i18n="community">СООБЩЕСТВО</h3>
                     <div class="stat-row">
                         <span data-i18n="total_subscribers">Всего подписчиков:</span>
                         <b id="total-subscribers">113,123</b>
@@ -88,7 +88,7 @@
                     </div>
                 </div>
                 <div class="stats-section">
-                    <h3>ИНВЕСТИЦИИ</h3>
+                    <h3 data-i18n="investments">ИНВЕСТИЦИИ</h3>
                     <div class="stat-row">
                         <span data-i18n="amount">Сумма:</span>
                         <b id="dash-invested">0.00 TON</b>
@@ -103,11 +103,11 @@
                     </div>
                     <div class="stat-row">
                         <span data-i18n="month">Месяц:</span>
-                        <b id="dash-monthly-inv">0.00 TON</b> <!-- ИСПРАВЛЕНО: было dash-monthly-iv -->
+                        <b id="dash-monthly-inv">0.00 TON</b> <!-- ИСПРАВЛЕНО -->
                     </div>
                 </div>
                 <div class="stats-section">
-                    <h3>БЕСПЛАТНЫЙ МАЙНИНГ</h3>
+                    <h3 data-i18n="free_mining">БЕСПЛАТНЫЙ МАЙНИНГ</h3>
                     <div class="stat-row">
                         <span data-i18n="speed">Скорость:</span>
                         <b id="dash-speed">100%</b>
@@ -126,7 +126,7 @@
                     </div>
                 </div>
                 <div class="stats-section">
-                    <h3>СЕЙЧАС НАЧИСЛЯЕТСЯ</h3>
+                    <h3 data-i18n="currently_earning">СЕЙЧАС НАЧИСЛЯЕТСЯ</h3>
                     <div class="stat-row">
                         <span data-i18n="per_day">В день:</span>
                         <b id="dash-total-daily">0.0000 TON</b>
@@ -137,11 +137,11 @@
                     </div>
                 </div>
                 <div class="stats-section">
-                    <h3>ТОП 10 ИНВЕСТОРОВ</h3>
+                    <h3 data-i18n="top_investors">ТОП 10 ИНВЕСТОРОВ</h3>
                     <div class="top-investors-list" id="top-investors-list"></div>
                 </div>
                 <div class="stats-section">
-                    <h3>ЗАЯВКИ НА ВЫВОД</h3>
+                    <h3 data-i18n="withdraw_requests">ЗАЯВКИ НА ВЫВОД</h3>
                     <div class="withdraw-requests-list" id="withdraw-requests-list"></div>
                 </div>
                 <div class="stats-section">
@@ -161,7 +161,7 @@
         <!-- РЕФЕРАЛЬНАЯ ПРОГРАММА -->
         <div id="referral" class="section">
             <div class="card">
-                <h2>Реферальная программа</h2>
+                <h2 data-i18n="referral_program">Реферальная программа</h2>
               
                 <div class="ref-stats">
                     <div class="ref-stat">
@@ -208,14 +208,20 @@
                        style="border:1px solid #ccc; border-radius:12px; padding:6px;">
                   <p style="margin-top:10px;" data-i18n="ton_address">Адрес TON:</p>
                   <p id="qr-address" style="font-size:0.9em; word-break:break-all; color:#555;">—</p>
+
+                  <!-- КОММЕНТАРИЙ -->
+                  <p style="margin-top:8px; font-size:0.9em; color:#666;">
+                      Комментарий: <span id="qr-comment" style="color:#555;">—</span>
+                  </p>
+
                   <button id="copyAddressBtn" style="margin-top:8px; padding:5px 10px;"
                           data-i18n="copy_address">Скопировать адрес</button>
 
-                  <!-- КНОПКА РУЧНОЙ ПРОВЕРКИ -->
+                  <!-- КНОПКА ПРОВЕРКИ -->
                   <button id="checkPaymentBtn" 
                           style="margin-top:15px; background:#2196F3; display:none;" 
                           class="btn big-btn">
-                      Проверить оплату
+                      <span data-i18n="check_payment">Проверить оплату</span>
                   </button>
                 </div>
               
