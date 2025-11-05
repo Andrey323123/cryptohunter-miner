@@ -1,4 +1,4 @@
-# main.py — v4.1 — СКАНЕР И РАССЫЛКА ЗАКОММЕНТИРОВАНЫ (ПОКА НЕ НУЖНЫ)
+# main.py — v4.2 — CSS ИЗ bot/webapp/style.css (БЕЗ assets)
 import os
 import asyncio
 import logging
@@ -49,7 +49,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ОТДАЁМ ВСЁ ИЗ bot/webapp/ → /webapp/style.css, /webapp/script.js и т.д.
 app.mount("/webapp", StaticFiles(directory="bot/webapp"), name="webapp")
+
+# ОТДАЁМ assets/ → /assets/images/... (если будут)
 app.mount("/assets", StaticFiles(directory="bot/webapp/assets"), name="assets")
 
 @app.get("/")
@@ -60,8 +64,9 @@ async def root():
 async def health():
     return {
         "status": "ok",
-        "scanner": "disabled (закомментирован)",
-        "outreach": "disabled (закомментирован)",
+        "scanner": "disabled",
+        "outreach": "disabled",
+        "css": "served from /webapp/style.css",
         "referrals": "enabled"
     }
 
