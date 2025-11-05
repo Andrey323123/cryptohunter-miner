@@ -4,7 +4,6 @@
     padding: 0;
     box-sizing: border-box;
 }
-
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
@@ -12,7 +11,6 @@ body {
     min-height: 100vh;
     line-height: 1.6;
 }
-
 .container {
     max-width: 400px;
     margin: 0 auto;
@@ -27,7 +25,6 @@ body {
     margin-bottom: 20px;
     position: relative;
 }
-
 h1 {
     font-size: 32px;
     margin: 12px 0 8px;
@@ -47,7 +44,6 @@ h1 {
     gap: 4px;
     border: 1px solid rgba(0, 255, 204, 0.3);
 }
-
 .lang-btn {
     background: transparent;
     border: none;
@@ -60,13 +56,11 @@ h1 {
     transition: all 0.3s ease;
     min-width: 40px;
 }
-
 .lang-btn.active {
     background: #00ffcc;
     color: #0f0c29;
     box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
 }
-
 .lang-btn:hover:not(.active) {
     background: rgba(255, 255, 255, 0.1);
     transform: scale(1.05);
@@ -90,7 +84,6 @@ h1 {
     margin: 22px 0 28px;
     justify-content: center;
 }
-
 .action-btn {
     flex: 1;
     background: rgba(0, 255, 204, 0.18);
@@ -107,7 +100,6 @@ h1 {
     transition: all 0.35s ease;
     cursor: pointer;
 }
-
 .action-btn:hover {
     background: rgba(0, 255, 204, 0.35);
     transform: translateY(-5px);
@@ -122,7 +114,6 @@ h1 {
     margin: 25px 0;
     text-align: center;
 }
-
 .balance-card h2 {
     font-size: 38px;
     color: #00ffcc;
@@ -137,7 +128,6 @@ h1 {
     gap: 14px;
     margin: 28px 0;
 }
-
 .stat {
     background: rgba(255, 255, 255, 0.09);
     padding: 16px 10px;
@@ -145,7 +135,6 @@ h1 {
     text-align: center;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
-
 .stat b {
     display: block;
     font-size: 19px;
@@ -160,7 +149,6 @@ h1 {
     gap: 14px;
     margin: 32px 0 20px;
 }
-
 .nav-btn {
     background: linear-gradient(135deg, #00ffcc, #00ccaa);
     color: #000;
@@ -176,7 +164,6 @@ h1 {
     gap: 10px;
     transition: all 0.3s ease;
 }
-
 .nav-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0, 255, 204, 0.4);
@@ -191,7 +178,6 @@ h1 {
     border: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
 }
-
 .card h2 {
     font-size: 18px;
     margin-bottom: 15px;
@@ -207,7 +193,6 @@ h1 {
     padding-bottom: 15px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
-
 .stats-section h3 {
     font-size: 16px;
     margin-bottom: 12px;
@@ -216,11 +201,9 @@ h1 {
     align-items: center;
     gap: 8px;
 }
-
 .stats-section:last-child {
     border-bottom: none;
 }
-
 .stat-row {
     display: flex;
     justify-content: space-between;
@@ -228,12 +211,11 @@ h1 {
     font-size: 14px;
     align-items: center;
 }
-
 .stat-row:last-child {
     margin-bottom: 0;
 }
 
-/* ===== СТИЛИ ДЛЯ СТАТИСТИКИ ПОДПИСЧИКОВ ===== */
+/* ===== COMMUNITY STATS ===== */
 .community-stats {
     background: rgba(0, 255, 204, 0.1);
     padding: 15px;
@@ -241,42 +223,36 @@ h1 {
     margin-bottom: 15px;
     border: 1px solid rgba(0, 255, 204, 0.2);
 }
-
 .community-stat {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 8px 0;
 }
-
 .community-stat:not(:last-child) {
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
-
 .community-label {
     font-size: 14px;
     opacity: 0.9;
 }
-
 .community-value {
     font-size: 16px;
     font-weight: bold;
     color: #00ffcc;
 }
-
 .community-change {
     font-size: 14px;
     color: #4CAF50;
     font-weight: 600;
 }
 
-/* ===== СТИЛИ ДЛЯ ТОП ИНВЕСТОРОВ ===== */
+/* ===== TOP INVESTORS ===== */
 .top-investors-list {
     max-height: 300px;
     overflow-y: auto;
     margin-top: 10px;
 }
-
 .investor-item {
     display: flex;
     align-items: center;
@@ -287,12 +263,10 @@ h1 {
     margin-bottom: 8px;
     transition: all 0.3s ease;
 }
-
 .investor-item:hover {
     background: rgba(255, 255, 255, 0.1);
     transform: translateX(5px);
 }
-
 .investor-rank {
     font-size: 1.4em;
     margin-right: 15px;
@@ -300,47 +274,30 @@ h1 {
     text-align: center;
     font-weight: bold;
 }
-
 .investor-info {
     flex: 1;
 }
-
 .investor-wallet {
     font-size: 12px;
     font-family: 'Courier New', monospace;
     color: rgba(255, 255, 255, 0.8);
     margin-bottom: 4px;
 }
-
 .investor-amount {
     font-size: 14px;
     font-weight: bold;
     color: #00ffcc;
 }
+.investor-item:nth-child(1) .investor-rank { color: gold; text-shadow: 0 0 10px gold; }
+.investor-item:nth-child(2) .investor-rank { color: silver; text-shadow: 0 0 10px silver; }
+.investor-item:nth-child(3) .investor-rank { color: #cd7f32; text-shadow: 0 0 10px #cd7f32; }
 
-/* Специальные стили для первых трех мест */
-.investor-item:nth-child(1) .investor-rank {
-    color: gold;
-    text-shadow: 0 0 10px gold;
-}
-
-.investor-item:nth-child(2) .investor-rank {
-    color: silver;
-    text-shadow: 0 0 10px silver;
-}
-
-.investor-item:nth-child(3) .investor-rank {
-    color: #cd7f32; /* bronze */
-    text-shadow: 0 0 10px #cd7f32;
-}
-
-/* ===== СТИЛИ ДЛЯ ЗАЯВОК НА ВЫВОД ===== */
+/* ===== WITHDRAW REQUESTS ===== */
 .withdraw-requests-list {
     max-height: 250px;
     overflow-y: auto;
     margin-top: 10px;
 }
-
 .withdraw-request-item {
     display: flex;
     align-items: center;
@@ -352,43 +309,29 @@ h1 {
     margin-bottom: 6px;
     transition: all 0.3s ease;
 }
-
 .withdraw-request-item:hover {
     background: rgba(255, 255, 255, 0.1);
 }
-
 .request-wallet {
     font-size: 11px;
     font-family: 'Courier New', monospace;
     color: rgba(255, 255, 255, 0.8);
     flex: 1;
 }
-
 .request-amount {
     font-size: 13px;
     font-weight: bold;
     color: #00ffcc;
     margin: 0 15px;
 }
-
 .request-status {
     font-size: 16px;
     min-width: 30px;
     text-align: center;
 }
-
-/* Стили для статусов */
-.status-ready {
-    color: #4CAF50;
-}
-
-.status-pending {
-    color: #FF9800;
-}
-
-.status-processing {
-    color: #2196F3;
-}
+.status-ready { color: #4CAF50; }
+.status-pending { color: #FF9800; }
+.status-processing { color: #2196F3; }
 
 /* ===== REFERRAL STYLES ===== */
 .ref-stats {
@@ -397,7 +340,6 @@ h1 {
     gap: 12px;
     margin-bottom: 20px;
 }
-
 .ref-stat {
     text-align: center;
     background: rgba(0, 255, 204, 0.1);
@@ -405,23 +347,19 @@ h1 {
     border-radius: 15px;
     border: 1px solid rgba(0, 255, 204, 0.2);
 }
-
 .ref-stat-value {
     font-size: 20px;
     font-weight: bold;
     color: #00ffcc;
     margin-bottom: 5px;
 }
-
 .ref-stat-label {
     font-size: 12px;
     opacity: 0.8;
 }
-
 .ref-link-container {
     margin-top: 20px;
 }
-
 .ref-link-box {
     background: rgba(255, 255, 255, 0.1);
     padding: 15px;
@@ -437,14 +375,12 @@ h1 {
 .input-group {
     margin-bottom: 15px;
 }
-
 .input-group label {
     display: block;
     margin-bottom: 8px;
     font-size: 14px;
     font-weight: 600;
 }
-
 .input-field {
     width: 100%;
     padding: 12px 15px;
@@ -455,11 +391,9 @@ h1 {
     font-size: 14px;
     transition: all 0.3s ease;
 }
-
 .input-field::placeholder {
     color: rgba(255, 255, 255, 0.5);
 }
-
 .input-field:focus {
     outline: none;
     border-color: #00ffcc;
@@ -483,18 +417,15 @@ h1 {
     justify-content: center;
     gap: 8px;
 }
-
 .btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0, 255, 204, 0.4);
 }
-
 .big-btn {
     padding: 18px;
     font-size: 16px;
     font-weight: 700;
 }
-
 .copy-btn {
     background: linear-gradient(135deg, #2196F3, #1976D2);
     width: auto;
@@ -502,18 +433,15 @@ h1 {
     margin: 10px auto;
     color: white;
 }
-
 .check-btn {
     background: linear-gradient(135deg, #4CAF50, #45a049);
     color: white;
 }
-
 .back {
     background: linear-gradient(135deg, #666, #555);
     color: white;
     margin-top: 20px;
 }
-
 .back:hover {
     background: linear-gradient(135deg, #777, #666);
 }
@@ -524,7 +452,6 @@ h1 {
     padding-top: 20px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
-
 .calc-results {
     background: rgba(0, 255, 204, 0.1);
     padding: 15px;
@@ -532,7 +459,6 @@ h1 {
     margin-top: 15px;
     border: 1px solid rgba(0, 255, 204, 0.2);
 }
-
 .calc-result-item {
     display: flex;
     justify-content: space-between;
@@ -540,7 +466,6 @@ h1 {
     font-size: 14px;
     align-items: center;
 }
-
 .calc-result-item:last-child {
     margin-bottom: 0;
 }
@@ -556,7 +481,6 @@ h1 {
     border: 2px dashed #00ffcc;
     animation: fadeIn 0.5s ease;
 }
-
 #qr-img {
     width: 220px;
     height: 220px;
@@ -565,8 +489,8 @@ h1 {
     padding: 6px;
     background: white;
     margin: 0 auto;
+    image-rendering: pixelated;
 }
-
 #qr-address {
     font-size: 0.9em;
     word-break: break-all;
@@ -577,7 +501,6 @@ h1 {
     border-radius: 8px;
     font-family: 'Courier New', monospace;
 }
-
 #copyAddressBtn {
     margin-top: 8px;
     padding: 8px 16px;
@@ -589,7 +512,6 @@ h1 {
     font-weight: 600;
     transition: all 0.3s ease;
 }
-
 #copyAddressBtn:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
@@ -599,12 +521,10 @@ h1 {
 .section {
     display: none;
 }
-
 .section.active {
     display: block;
     animation: fadeIn 0.3s ease;
 }
-
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -628,26 +548,13 @@ h1 {
     text-align: center;
     max-width: 90%;
 }
-
 .notification.show {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
 }
-
-.notification.error {
-    background: #ff4444;
-    color: #fff;
-}
-
-.notification.info {
-    background: #2196F3;
-    color: #fff;
-}
-
-.notification.success {
-    background: #4CAF50;
-    color: #fff;
-}
+.notification.error { background: #ff4444; color: #fff; }
+.notification.info { background: #2196F3; color: #fff; }
+.notification.success { background: #4CAF50; color: #fff; }
 
 /* ===== STATUS MESSAGES ===== */
 .status-message {
@@ -658,18 +565,8 @@ h1 {
     text-align: center;
     border: 1px solid;
 }
-
-.status-success {
-    background: rgba(76, 175, 80, 0.2);
-    color: #4CAF50;
-    border-color: #4CAF50;
-}
-
-.status-error {
-    background: rgba(244, 67, 54, 0.2);
-    color: #f44336;
-    border-color: #f44336;
-}
+.status-success { background: rgba(76, 175, 80, 0.2); color: #4CAF50; border-color: #4CAF50; }
+.status-error { background: rgba(244, 67, 54, 0.2); color: #f44336; border-color: #f44336; }
 
 /* ===== BALANCE INFO ===== */
 .balance-info {
@@ -680,119 +577,41 @@ h1 {
     text-align: center;
     border: 1px solid rgba(0, 255, 204, 0.3);
 }
-
-.balance-info p {
-    margin: 0;
-    font-size: 16px;
-}
-
-.balance-info b {
-    color: #00ffcc;
-    font-size: 18px;
-}
+.balance-info p { margin: 0; font-size: 16px; }
+.balance-info b { color: #00ffcc; font-size: 18px; }
 
 /* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 480px) {
-    .container {
-        padding: 10px;
-    }
-    
-    h1 {
-        font-size: 28px;
-    }
-    
-    .header {
-        flex-direction: column;
-        gap: 10px;
-        text-align: center;
-    }
-    
-    .language-switcher {
-        align-self: center;
-    }
-    
-    .mining-gif {
-        width: 140px;
-        height: 140px;
-    }
-    
-    .top-actions {
-        flex-direction: column;
-        gap: 12px;
-    }
-    
-    .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    
-    .ref-stats {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    
-    .balance-card h2 {
-        font-size: 32px;
-    }
-    
-    .btn {
-        padding: 12px 15px;
-        font-size: 14px;
-    }
-    
-    .investor-item {
-        padding: 10px;
-    }
-    
-    .withdraw-request-item {
-        padding: 8px 10px;
-    }
+    .container { padding: 10px; }
+    h1 { font-size: 28px; }
+    .header { flex-direction: column; gap: 10px; text-align: center; }
+    .language-switcher { align-self: center; }
+    .mining-gif { width: 140px; height: 140px; }
+    .top-actions { flex-direction: column; gap: 12px; }
+    .stats-grid, .ref-stats { grid-template-columns: 1fr; gap: 10px; }
+    .balance-card h2 { font-size: 32px; }
+    .btn { padding: 12px 15px; font-size: 14px; }
+    .investor-item, .withdraw-request-item { padding: 10px; }
 }
 
 /* ===== SCROLLBAR STYLING ===== */
-::-webkit-scrollbar {
-    width: 6px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #00ffcc;
-    border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #00ccaa;
-}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: #00ffcc; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #00ccaa; }
 
 /* ===== LOADING ANIMATION ===== */
 @keyframes pulse {
-    0% { opacity: 1; }
+    0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
-    100% { opacity: 1; }
 }
-
-.loading {
-    animation: pulse 1.5s ease-in-out infinite;
-}
+.loading { animation: pulse 1.5s ease-in-out infinite; }
 
 /* ===== ICON STYLES ===== */
-.icon {
-    width: 20px;
-    height: 20px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
+.icon { width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; }
 
 /* ===== TEXT STYLES ===== */
-.text-center {
-    text-align: center;
-}
-
+.text-center { text-align: center; }
 .text-gradient {
     background: linear-gradient(135deg, #00ffcc, #00ccaa);
     -webkit-background-clip: text;
@@ -815,19 +634,10 @@ h1 {
 
 /* ===== ДОПОЛНИТЕЛЬНЫЕ АНИМАЦИИ ===== */
 @keyframes slideInFromRight {
-    from {
-        opacity: 0;
-        transform: translateX(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
 }
-
-.new-item {
-    animation: slideInFromRight 0.5s ease;
-}
+.new-item { animation: slideInFromRight 0.5s ease; }
 
 /* ===== БАДЖИ И МЕТКИ ===== */
 .badge {
@@ -838,18 +648,6 @@ h1 {
     font-weight: bold;
     margin-left: 8px;
 }
-
-.badge-new {
-    background: #4CAF50;
-    color: white;
-}
-
-.badge-hot {
-    background: #FF5722;
-    color: white;
-}
-
-.badge-vip {
-    background: linear-gradient(135deg, #FFD700, #FFA500);
-    color: black;
-}
+.badge-new { background: #4CAF50; color: white; }
+.badge-hot { background: #FF5722; color: white; }
+.badge-vip { background: linear-gradient(135deg, #FFD700, #FFA500); color: black; }
