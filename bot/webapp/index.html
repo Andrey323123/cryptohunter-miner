@@ -101,11 +101,10 @@
                     <div class="stat-row"><span data-i18n="per_hour">В час:</span><b id="dash-hourly">0.0000 TON</b></div>
                 </div>
 
-                <!-- ✅ ТОП 10 ИНВЕСТОРОВ -->
+                <!-- ТОП 10 ИНВЕСТОРОВ -->
                 <div class="stats-section">
                     <h3 data-i18n="top_investors">ТОП 10 ИНВЕСТОРОВ</h3>
                     <div id="top-investors-list" class="list-box">
-                        <!-- Динамически заполняется через JavaScript -->
                         <div class="investor-row">
                             <div class="investor-rank">#1</div>
                             <div class="investor-name">CryptoWolf</div>
@@ -139,11 +138,10 @@
                     </div>
                 </div>
 
-                <!-- ✅ ЗАЯВКИ НА ВЫВОД -->
+                <!-- ЗАЯВКИ НА ВЫВОД -->
                 <div class="stats-section">
                     <h3 data-i18n="withdraw_requests">ЗАЯВКИ НА ВЫВОД</h3>
                     <div id="withdraw-requests-list" class="list-box">
-                        <!-- Динамически заполняется через JavaScript -->
                         <div class="withdraw-row completed">
                             <div class="withdraw-user">Andrey</div>
                             <div class="withdraw-amount">125.50 TON</div>
@@ -218,7 +216,7 @@
             <div class="card">
                 <h2 data-i18n="investing">Инвестирование</h2>
                 
-                <!-- ✅ КАЛЬКУЛЯТОР ДОХОДНОСТИ -->
+                <!-- КАЛЬКУЛЯТОР ДОХОДНОСТИ -->
                 <div class="calculator-section" style="margin-bottom: 25px; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; color: white;">
                     <h3 style="margin: 0 0 15px 0; text-align: center;" data-i18n="profit_calculator">Калькулятор доходности</h3>
                     
@@ -305,3 +303,66 @@
 
     <!-- === УВЕДОМЛЕНИЯ === -->
     <div id="notification" class="notification"></div>
+
+    <!-- === ВСТРОЕННЫЙ КАЛЬКУЛЯТОР (локальный) === -->
+    <script>
+        function calculateProfit() {
+            const input = document.getElementById('calc-amount');
+            const amount = parseFloat(input?.value) || 0;
+
+            const results = {
+                daily: 0,
+                weekly: 0,
+                monthly: 0,
+                yearly: 0,
+                bonus: 0
+            };
+
+            if (amount >= 1) {
+                const MONTHLY_RATE = 0.25;
+                const BASE_MINING_DAYS = 90;
+                const BONUS_PERCENT = 0.05;
+
+                // Инвестиционный доход в день
+                const investmentDaily = amount * (MONTHLY_RATE / 30);
+
+                // Ускорение майнинга: +1% за каждые 40 TON
+                const acceleration = Math.floor(amount / 40) * 0.01;
+                const miningSpeed = 1 + acceleration;
+
+                // Бесплатный майнинг в день
+                const freeMiningDaily = (1 / BASE_MINING_DAYS) * miningSpeed;
+
+                // Общий доход
+                const totalDaily = investmentDaily + freeMiningDaily;
+                const bonus = amount * BONUS_PERCENT;
+
+                results.daily = totalDaily;
+                results.weekly = totalDaily * 7;
+                results.monthly = totalDaily * 30;
+                results.yearly = totalDaily * 365;
+                results.bonus = bonus;
+            }
+
+            // Обновление интерфейса
+            const set = (id, value, fixed = 4) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = value.toFixed(fixed) + ' TON';
+            };
+
+            set('calc-daily', results.daily, 6);
+            set('calc-weekly', results.weekly, 6);
+            set('calc-monthly', results.monthly, 4);
+            set('calc-yearly', results.yearly, 2);
+            document.getElementById('calc-bonus').textContent = '+' + results.bonus.toFixed(2) + ' TON';
+        }
+
+        // Запуск расчёта при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            if (document.getElementById('calc-amount')) {
+                calculateProfit();
+            }
+        });
+    </script>
+</body>
+</html>
