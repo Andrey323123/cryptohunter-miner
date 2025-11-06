@@ -1,10 +1,9 @@
-# main.py — v4.2 — CSS ИЗ bot/webapp/style.css (БЕЗ assets)
+# main.py — v4.2 — Однократная авторизация Telethon через AUTH_CODE
 import os
 import asyncio
 import logging
 import sys
 from pathlib import Path
-from datetime import datetime
 
 # Ускорение
 import uvloop
@@ -64,10 +63,11 @@ async def root():
 async def health():
     return {
         "status": "ok",
-        "scanner": "disabled",
+        "scanner": "disabled", 
         "outreach": "disabled",
         "css": "served from /webapp/style.css",
-        "referrals": "enabled"
+        "referrals": "enabled",
+        "telethon": "AUTH_CODE from Railway Variables"
     }
 
 # === ВАЛИДАЦИЯ INITDATA ===
@@ -294,84 +294,70 @@ async def api_referral(request: Request):
             "income": float(total_income)
         }
 
-# === ЗАКОММЕНТИРОВАННЫЕ ФУНКЦИИ (НЕ РАБОТАЮТ) ===
-"""
-# === ТОЛЬКО outreach_session.session — ЧИТАЕТ API_ID, API_HASH, PHONE ===
-async def create_client():
+# === АВТОРИЗАЦИЯ TELEGRAM CLIENT (ОДНОКРАТНАЯ ЧЕРЕЗ AUTH_CODE) ===
+async def authorize_telegram_once():
+    """Однократная авторизация Telethon при старте через AUTH_CODE из Railway Variables"""
     api_id = os.getenv("API_ID")
     api_hash = os.getenv("API_HASH")
     phone = os.getenv("PHONE")
-   
+    auth_code = os.getenv("AUTH_CODE")  # Код из Railway Variables
+    
+    logger.info(f"🔐 Попытка авторизации Telethon для {phone}")
+    
     if not all([api_id, api_hash, phone]):
-        logger.error("Нет API_ID / API_HASH / PHONE в .env")
+        logger.error("❌ Не хватает переменных: API_ID, API_HASH или PHONE")
         return None
-   
-    api_id = int(api_id)
-    client = TelegramClient("outreach_session", api_id, api_hash)
-    session_file = "outreach_session.session"
-    if os.path.exists(session_file):
-        try:
-            await client.connect()
-            if await client.is_user_authorized():
-                logger.info("outreach_session.session — подключена")
-                return client
-            else:
-                logger.warning("Сессия не авторизована — удаляю")
-                os.remove(session_file)
-        except Exception as e:
-            logger.warning(f"Сессия повреждена: {e}")
-            try: os.remove(session_file)
-            except: pass
-    logger.info(f"Авторизация: {phone}")
+        
+    if not auth_code:
+        logger.warning("⚠️ AUTH_CODE не указан - Telethon не будет авторизован")
+        return None
+    
     try:
-        await client.start(phone=lambda: phone)
-        logger.info("outreach_session.session — создана и авторизована")
-        return client
-    except SessionPasswordNeededError:
-        logger.error("2FA включён — отключите в настройках Telegram")
-        return None
+        client = TelegramClient("telethon_session", int(api_id), api_hash)
+        await client.connect()
+        
+        # Проверяем, не авторизованы ли уже
+        if await client.is_user_authorized():
+            logger.info("✅ Telethon уже авторизован (существующая сессия)")
+            return client
+            
+        logger.info("📲 Отправка запроса кода...")
+        sent_code = await client.send_code_request(phone)
+        phone_code_hash = sent_code.phone_code_hash
+        
+        logger.info(f"🔢 Используем код из AUTH_CODE: {auth_code}")
+        
+        try:
+            # Пытаемся войти с кодом из Variables
+            await client.sign_in(
+                phone=phone,
+                code=auth_code,
+                phone_code_hash=phone_code_hash
+            )
+            logger.info("✅ Авторизация Telethon успешно завершена!")
+            return client
+            
+        except SessionPasswordNeededError:
+            logger.error("❌ Требуется 2FA пароль. Отключите 2FA в настройках Telegram")
+            await client.disconnect()
+            return None
+        except Exception as e:
+            logger.error(f"❌ Ошибка авторизации с кодом: {e}")
+            await client.disconnect()
+            return None
+            
     except Exception as e:
-        logger.error(f"Ошибка авторизации: {e}")
+        logger.error(f"❌ Ошибка инициализации Telethon: {e}")
         return None
 
-# === LEAD SCANNER (ВЫКЛЮЧЕН) ===
-async def run_lead_scanner():
-    while True:
-        client = await create_client()
-        if not client:
-            await asyncio.sleep(3600)
-            continue
-        try:
-            logger.info("LEAD SCANNER: Запуск на outreach_session.session")
-            from lead_scanner import run_scanner
-            await run_scanner(client)
-            await client.disconnect()
-            logger.info("LEAD SCANNER: Ждём 4 часа...")
-            await asyncio.sleep(4 * 3600)
-        except Exception as e:
-            logger.error(f"SCANNER упал: {e}")
-            await client.disconnect()
-            await asyncio.sleep(3600)
+# Глобальная переменная для клиента
+telegram_client = None
 
-# === OUTREACH SENDER (ВЫКЛЮЧЕН) ===
-async def run_outreach_sender():
-    while True:
-        client = await create_client()
-        if not client:
-            await asyncio.sleep(3600)
-            continue
-        try:
-            logger.info("OUTREACH: Запуск на outreach_session.session")
-            from outreach_sender import safe_send
-            await safe_send(client)
-            await client.disconnect()
-            logger.info("OUTREACH: Ждём 3 часа...")
-            await asyncio.sleep(3 * 3600)
-        except Exception as e:
-            logger.error(f"OUTREACH упал: {e}")
-            await client.disconnect()
-            await asyncio.sleep(3600)
-"""
+async def initialize_telegram():
+    """Инициализация Telegram клиента при старте"""
+    global telegram_client
+    telegram_client = await authorize_telegram_once()
+    return telegram_client
 
 # === БОТ (РАБОТАЕТ) ===
 async def start_bot():
@@ -381,10 +367,10 @@ async def start_bot():
             dp = Dispatcher(storage=MemoryStorage())
             dp.include_router(router)
             dp.include_router(admin_router)
-            logger.info("БОТ: Запуск...")
+            logger.info("🤖 БОТ: Запуск...")
             await dp.start_polling(bot)
         except Exception as e:
-            logger.error(f"БОТ упал: {e}")
+            logger.error(f"❌ БОТ упал: {e}")
             await asyncio.sleep(15)
 
 # === НАЧИСЛЕНИЯ (РАБОТАЮТ) ===
@@ -401,14 +387,14 @@ async def hourly_accrual():
                     user.free_mining_balance += hourly
                     user.total_earned += hourly
             await db.commit()
-        logger.info("Начисления: +0.0005 TON/час")
+        logger.info("💰 Начисления: +0.0005 TON/час")
     except Exception as e:
-        logger.error(f"Начисления: {e}")
+        logger.error(f"❌ Начисления: {e}")
 
 async def scheduler():
     import aioschedule
     aioschedule.every().hour.at(":00").do(lambda: asyncio.create_task(hourly_accrual()))
-    logger.info("Планировщик: запущен")
+    logger.info("⏰ Планировщик: запущен")
     while True:
         await aioschedule.run_pending()
         await asyncio.sleep(30)
@@ -417,7 +403,7 @@ async def scheduler():
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    logger.info("БД: инициализирована")
+    logger.info("🗄️ БД: инициализирована")
 
 # === СЕРВЕР ===
 async def serve_api():
@@ -425,17 +411,23 @@ async def serve_api():
     port = int(os.getenv("PORT", 8080))
     config = uvicorn.Config(app, host="0.0.0.0", port=port, log_level="info")
     server = uvicorn.Server(config)
-    logger.info(f"API: запуск на порту {port}")
+    logger.info(f"🌐 API: запуск на порту {port}")
     await server.serve()
 
-# === ГЛАВНЫЙ ЦИКЛ — ТОЛЬКО БОТ, API, НАЧИСЛЕНИЯ ===
+# === ГЛАВНЫЙ ЦИКЛ ===
 async def main():
-    logger.info("CRYPTOHUNTER v4.1 — СКАНЕР И РАССЫЛКА ВЫКЛЮЧЕНЫ")
+    logger.info("🚀 CRYPTOHUNTER v4.2 - Однократная авторизация Telethon через AUTH_CODE")
     await init_db()
+    
+    # Инициализируем Telegram клиент
+    client = await initialize_telegram()
+    if client:
+        logger.info("✅ Telethon клиент готов к работе")
+    else:
+        logger.warning("⚠️ Telethon клиент не авторизован")
+    
     await asyncio.gather(
         start_bot(),
-        # run_lead_scanner(),     # ← ЗАКОММЕНТИРОВАНО
-        # run_outreach_sender(),  # ← ЗАКОММЕНТИРОВАНО
         scheduler(),
         serve_api()
     )
