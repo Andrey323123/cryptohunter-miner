@@ -75,18 +75,20 @@
             <div class="card">
                 <h2 data-i18n="detailed_stats">Детальная статистика</h2>
 
+                <!-- СООБЩЕСТВО -->
                 <div class="stats-section">
                     <h3 data-i18n="community">СООБЩЕСТВО</h3>
                     <div class="stat-row">
                         <span data-i18n="total_subscribers">Всего подписчиков:</span>
-                        <b id="total-subscribers">113,123</b>
+                        <b id="community-total">0</b>
                     </div>
                     <div class="stat-row">
                         <span data-i18n="active_today">Активных сегодня:</span>
-                        <b id="active-today">+1,247</b>
+                        <b id="community-active">0</b>
                     </div>
                 </div>
 
+                <!-- ИНВЕСТИЦИИ -->
                 <div class="stats-section">
                     <h3 data-i18n="investments">ИНВЕСТИЦИИ</h3>
                     <div class="stat-row"><span data-i18n="amount">Сумма:</span><b id="dash-invested">0.00 TON</b></div>
@@ -95,6 +97,7 @@
                     <div class="stat-row"><span data-i18n="month">Месяц:</span><b id="dash-monthly-inv">0.00 TON</b></div>
                 </div>
 
+                <!-- БЕСПЛАТНЫЙ МАЙНИНГ -->
                 <div class="stats-section">
                     <h3 data-i18n="free_mining">БЕСПЛАТНЫЙ МАЙНИНГ</h3>
                     <div class="stat-row"><span data-i18n="speed">Скорость:</span><b id="dash-speed">100%</b></div>
@@ -103,6 +106,7 @@
                     <div class="stat-row"><span data-i18n="accumulated">Накоплено:</span><b id="dash-accumulated">0.00 TON</b></div>
                 </div>
 
+                <!-- СЕЙЧАС НАЧИСЛЯЕТСЯ -->
                 <div class="stats-section">
                     <h3 data-i18n="currently_earning">СЕЙЧАС НАЧИСЛЯЕТСЯ</h3>
                     <div class="stat-row"><span data-i18n="per_day">В день:</span><b id="dash-total-daily">0.0000 TON</b></div>
@@ -113,7 +117,7 @@
                 <div class="stats-section">
                     <h3 data-i18n="top_investors">ТОП 10 ИНВЕСТОРОВ</h3>
                     <div id="top-investors-list" class="list-box">
-                        <!-- сюда JS добавляет топ инвесторов -->
+                        <div class="empty-placeholder" data-i18n="no_data">Загрузка...</div>
                     </div>
                 </div>
 
@@ -121,10 +125,11 @@
                 <div class="stats-section">
                     <h3 data-i18n="withdraw_requests">ЗАЯВКИ НА ВЫВОД</h3>
                     <div id="withdraw-requests-list" class="list-box">
-                        <!-- сюда JS добавляет заявки -->
+                        <div class="empty-placeholder" data-i18n="no_data">Загрузка...</div>
                     </div>
                 </div>
 
+                <!-- ВЫВОД -->
                 <div class="stats-section">
                     <h3>Вывод</h3>
                     <div class="stat-row"><span id="dash-withdraw-status">- <span data-i18n="not_ready">Не готово</span></span></div>
