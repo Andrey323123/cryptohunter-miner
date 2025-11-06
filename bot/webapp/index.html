@@ -103,13 +103,75 @@
                 <!-- ✅ ТОП 10 ИНВЕСТОРОВ -->
                 <div class="stats-section">
                     <h3 data-i18n="top_investors">ТОП 10 ИНВЕСТОРОВ</h3>
-                    <div id="top-investors-list" class="list-box"></div>
+                    <div id="top-investors-list" class="list-box">
+                        <!-- Динамически заполняется через JavaScript -->
+                        <div class="investor-row">
+                            <div class="investor-rank">#1</div>
+                            <div class="investor-name">CryptoWolf</div>
+                            <div class="investor-amount">15,245.50 TON</div>
+                            <div class="investor-change positive">↗ 2.3%</div>
+                        </div>
+                        <div class="investor-row">
+                            <div class="investor-rank">#2</div>
+                            <div class="investor-name">TONHunter</div>
+                            <div class="investor-amount">12,890.25 TON</div>
+                            <div class="investor-change positive">↗ 1.8%</div>
+                        </div>
+                        <div class="investor-row">
+                            <div class="investor-rank">#3</div>
+                            <div class="investor-name">BlockShark</div>
+                            <div class="investor-amount">11,567.80 TON</div>
+                            <div class="investor-change negative">↘ 0.5%</div>
+                        </div>
+                        <div class="investor-row">
+                            <div class="investor-rank">#4</div>
+                            <div class="investor-name">Moonrider</div>
+                            <div class="investor-amount">8,945.30 TON</div>
+                            <div class="investor-change positive">↗ 3.1%</div>
+                        </div>
+                        <div class="investor-row">
+                            <div class="investor-rank">#5</div>
+                            <div class="investor-name">Tonik</div>
+                            <div class="investor-amount">7,234.15 TON</div>
+                            <div class="investor-change positive">↗ 1.2%</div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- ✅ ЗАЯВКИ НА ВЫВОД -->
                 <div class="stats-section">
                     <h3 data-i18n="withdraw_requests">ЗАЯВКИ НА ВЫВОД</h3>
-                    <div id="withdraw-requests-list" class="list-box"></div>
+                    <div id="withdraw-requests-list" class="list-box">
+                        <!-- Динамически заполняется через JavaScript -->
+                        <div class="withdraw-row completed">
+                            <div class="withdraw-user">Andrey</div>
+                            <div class="withdraw-amount">125.50 TON</div>
+                            <div class="withdraw-address">kQ1234...abcd</div>
+                            <div class="withdraw-status completed">Выполнен</div>
+                            <div class="withdraw-time">2ч 15м назад</div>
+                        </div>
+                        <div class="withdraw-row processing">
+                            <div class="withdraw-user">Ivan</div>
+                            <div class="withdraw-amount">89.75 TON</div>
+                            <div class="withdraw-address">UQ5678...efgh</div>
+                            <div class="withdraw-status processing">В процессе</div>
+                            <div class="withdraw-time">45м назад</div>
+                        </div>
+                        <div class="withdraw-row pending">
+                            <div class="withdraw-user">Anna</div>
+                            <div class="withdraw-amount">234.20 TON</div>
+                            <div class="withdraw-address">EQ9012...ijkl</div>
+                            <div class="withdraw-status pending">Ожидание</div>
+                            <div class="withdraw-time">15м назад</div>
+                        </div>
+                        <div class="withdraw-row completed">
+                            <div class="withdraw-user">Sergey</div>
+                            <div class="withdraw-amount">67.80 TON</div>
+                            <div class="withdraw-address">kQ3456...mnop</div>
+                            <div class="withdraw-status completed">Выполнен</div>
+                            <div class="withdraw-time">5ч 30м назад</div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="stats-section">
@@ -201,5 +263,3 @@
 
     <!-- === УВЕДОМЛЕНИЯ === -->
     <div id="notification" class="notification"></div>
-</body>
-</html>
