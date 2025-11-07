@@ -1,4 +1,4 @@
-# main.py — v4.2 — Однократная авторизация Telethon через AUTH_CODE
+# main.py — v4.4 — Чистое ядро без Telethon
 import os
 import asyncio
 import logging
@@ -20,8 +20,6 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
-from telethon import TelegramClient
-from telethon.errors import SessionPasswordNeededError
 
 from config import BOT_TOKEN, BOT_USERNAME
 from bot.handlers import router
@@ -64,10 +62,11 @@ async def health():
     return {
         "status": "ok",
         "scanner": "disabled", 
-        "outreach": "disabled",
+        "outreach": "disabled", 
+        "telethon": "disabled",
         "css": "served from /webapp/style.css",
         "referrals": "enabled",
-        "telethon": "AUTH_CODE from Railway Variables"
+        "mining": "active"
     }
 
 # === ВАЛИДАЦИЯ INITDATA ===
@@ -294,74 +293,6 @@ async def api_referral(request: Request):
             "income": float(total_income)
         }
 
-# === АВТОРИЗАЦИЯ TELEGRAM CLIENT (ОДНОКРАТНАЯ ЧЕРЕЗ AUTH_CODE) ===
-async def authorize_telegram_once():
-    """Однократная авторизация Telethon при старте через AUTH_CODE из Railway Variables"""
-    api_id = os.getenv("API_ID")
-    api_hash = os.getenv("API_HASH")
-    phone = os.getenv("PHONE")
-    auth_code = os.getenv("AUTH_CODE")  # Код из Railway Variables
-    
-    logger.info(f"🔐 Попытка авторизации Telethon для {phone}")
-    
-    if not all([api_id, api_hash, phone]):
-        logger.error("❌ Не хватает переменных: API_ID, API_HASH или PHONE")
-        return None
-        
-    if not auth_code:
-        logger.warning("⚠️ AUTH_CODE не указан - Telethon не будет авторизован")
-        return None
-    
-    try:
-        client = TelegramClient("telethon_session", int(api_id), api_hash)
-        
-        # ПЕРВОЕ ИЗМЕНЕНИЕ: Сначала авторизуемся, потом запускаем сервер
-        logger.info("🔐 Начинаем авторизацию Telethon...")
-        
-        # Проверяем, не авторизованы ли уже
-        await client.connect()
-        if await client.is_user_authorized():
-            logger.info("✅ Telethon уже авторизован (существующая сессия)")
-            return client
-            
-        logger.info("📲 Отправка запроса кода...")
-        sent_code = await client.send_code_request(phone)
-        phone_code_hash = sent_code.phone_code_hash
-        
-        logger.info(f"🔢 Используем код из AUTH_CODE: {auth_code}")
-        
-        try:
-            # Пытаемся войти с кодом из Variables
-            await client.sign_in(
-                phone=phone,
-                code=auth_code,
-                phone_code_hash=phone_code_hash
-            )
-            logger.info("✅ Авторизация Telethon успешно завершена!")
-            return client
-            
-        except SessionPasswordNeededError:
-            logger.error("❌ Требуется 2FA пароль. Отключите 2FA в настройках Telegram")
-            await client.disconnect()
-            return None
-        except Exception as e:
-            logger.error(f"❌ Ошибка авторизации с кодом: {e}")
-            await client.disconnect()
-            return None
-            
-    except Exception as e:
-        logger.error(f"❌ Ошибка инициализации Telethon: {e}")
-        return None
-
-# Глобальная переменная для клиента
-telegram_client = None
-
-async def initialize_telegram():
-    """Инициализация Telegram клиента при старте"""
-    global telegram_client
-    telegram_client = await authorize_telegram_once()
-    return telegram_client
-
 # === БОТ (РАБОТАЕТ) ===
 async def start_bot():
     while True:
@@ -390,17 +321,31 @@ async def hourly_accrual():
                     user.free_mining_balance += hourly
                     user.total_earned += hourly
             await db.commit()
-        logger.info("💰 Начисления: +0.0005 TON/час")
+        logger.info("💰 Начисления: выполнены")
     except Exception as e:
         logger.error(f"❌ Начисления: {e}")
 
+# === ПРОСТОЙ ПЛАНИРОВЩИК ===
 async def scheduler():
-    import aioschedule
-    aioschedule.every().hour.at(":00").do(lambda: asyncio.create_task(hourly_accrual()))
+    """Простой планировщик без aioschedule"""
     logger.info("⏰ Планировщик: запущен")
+    
     while True:
-        await aioschedule.run_pending()
-        await asyncio.sleep(30)
+        try:
+            import datetime
+            now = datetime.datetime.now()
+            
+            # Начисления каждый час в :00
+            if now.minute == 0:
+                logger.info("🕐 Время для начислений!")
+                await hourly_accrual()
+                await asyncio.sleep(61)  # Ждем чтобы не сработало дважды
+            else:
+                await asyncio.sleep(30)  # Проверяем каждые 30 секунд
+                
+        except Exception as e:
+            logger.error(f"❌ Ошибка планировщика: {e}")
+            await asyncio.sleep(30)
 
 # === ИНИЦИАЛИЗАЦИЯ БД ===
 async def init_db():
@@ -419,25 +364,25 @@ async def serve_api():
 
 # === ГЛАВНЫЙ ЦИКЛ ===
 async def main():
-    logger.info("🚀 CRYPTOHUNTER v4.2 - Однократная авторизация Telethon через AUTH_CODE")
+    logger.info("🚀 CRYPTOHUNTER v4.4 - Чистое ядро без Telethon")
     
-    # ВТОРОЕ ИЗМЕНЕНИЕ: Сначала инициализируем БД
+    # Инициализация БД
     await init_db()
     
-    # ТРЕТЬЕ ИЗМЕНЕНИЕ: Сначала авторизуем Telethon, потом запускаем всё остальное
-    logger.info("🔐 Начало авторизации Telethon...")
-    client = await initialize_telegram()
-    if client:
-        logger.info("✅ Telethon клиент готов к работе")
-    else:
-        logger.warning("⚠️ Telethon клиент не авторизован")
+    # Запуск всех сервисов
+    logger.info("🎯 Запуск всех сервисов...")
     
-    # ЧЕТВЕРТОЕ ИЗМЕНЕНИЕ: Только после авторизации запускаем сервер и бота
-    logger.info("🎯 Запуск всех сервисов после авторизации Telethon...")
+    # Создаем задачи явно
+    bot_task = asyncio.create_task(start_bot())
+    scheduler_task = asyncio.create_task(scheduler())
+    api_task = asyncio.create_task(serve_api())
+    
+    # Ожидаем завершения всех задач
     await asyncio.gather(
-        start_bot(),
-        scheduler(),
-        serve_api()
+        bot_task,
+        scheduler_task, 
+        api_task,
+        return_exceptions=True
     )
 
 if __name__ == "__main__":
