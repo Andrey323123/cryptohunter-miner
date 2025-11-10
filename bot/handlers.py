@@ -41,7 +41,7 @@ def extract_referrer_id(payload: str) -> int | None:
 # === КОМАНДА ДЛЯ ТЕСТИРОВАНИЯ НАЧИСЛЕНИЙ ===
 @router.message(Command("test_accrual"))
 async def test_accrual(message: Message):
-    """Тестовая команда для начисления за 1 час всем пользователям"""
+    """Тестовая команда для начисления за 1 час ВСЕМ пользователям"""
     if not is_admin(message.from_user.id):
         await message.answer("❌ Команда только для администраторов")
         return
@@ -56,22 +56,29 @@ async def test_accrual(message: Message):
             total_accrued = Decimal('0')
             
             for user in users:
+                # Даже если invested_amount = 0, начисляем базовый доход
                 invested = user.invested_amount or Decimal('0')
+                
+                # Базовый почасовой доход (бесплатный майнинг)
                 if invested > 0:
-                    # Расчет почасового дохода: 25% годовых / 24 часа / 365 дней
+                    # Если есть инвестиции: 25% годовых
                     hourly = (invested * Decimal('0.25')) / Decimal('365') / Decimal('24')
-                    user.free_mining_balance += hourly
-                    user.total_earned += hourly
-                    updated_count += 1
-                    total_accrued += hourly
-                    
-                    logger.info(f"💰 Тест: начислено {hourly:.6f} TON пользователю {user.user_id}")
+                else:
+                    # Если нет инвестиций: базовый бесплатный майнинг
+                    hourly = Decimal('0.0005')  # 0.0005 TON/час
+                
+                user.free_mining_balance += hourly
+                user.total_earned += hourly
+                updated_count += 1
+                total_accrued += hourly
+                
+                logger.info(f"💰 Тест: начислено {hourly:.6f} TON пользователю {user.user_id} (инвест: {invested})")
             
             await db.commit()
             
             await message.answer(
                 f"✅ Тестовые начисления выполнены!\n"
-                f"• Пользователей: {updated_count}\n"
+                f"• Обработано пользователей: {updated_count}\n"
                 f"• Общая сумма: {total_accrued:.6f} TON\n"
                 f"• Среднее на пользователя: {total_accrued/updated_count if updated_count > 0 else 0:.6f} TON\n\n"
                 f"Проверьте балансы в веб-приложении!"
@@ -80,6 +87,50 @@ async def test_accrual(message: Message):
             
     except Exception as e:
         logger.error(f"❌ Ошибка тестовых начислений: {e}")
+        await message.answer(f"❌ Ошибка: {e}")
+
+# === КОМАНДА ДЛЯ ПРОСМОТРА ПОЛЬЗОВАТЕЛЕЙ ===
+@router.message(Command("list_users"))
+async def list_users(message: Message):
+    """Показать всех пользователей"""
+    if not is_admin(message.from_user.id):
+        await message.answer("❌ Команда только для администраторов")
+        return
+    
+    try:
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(select(User))
+            users = result.scalars().all()
+            
+            if not users:
+                await message.answer("📭 В базе нет пользователей")
+                return
+            
+            response = "👥 Список пользователей:\n\n"
+            for user in users:
+                invested = user.invested_amount or Decimal('0')
+                balance = user.free_mining_balance or Decimal('0')
+                earned = user.total_earned or Decimal('0')
+                
+                response += f"ID: {user.user_id}\n"
+                response += f"Username: @{user.username or 'нет'}\n"
+                response += f"Инвест: {float(invested):.2f} TON\n"
+                response += f"Баланс: {float(balance):.2f} TON\n"
+                response += f"Заработано: {float(earned):.2f} TON\n"
+                response += f"Рефералов: {user.referral_count}\n"
+                response += "─" * 30 + "\n"
+            
+            # Если сообщение слишком длинное, разбиваем на части
+            if len(response) > 4000:
+                part1 = response[:4000]
+                part2 = response[4000:]
+                await message.answer(part1)
+                await message.answer(part2)
+            else:
+                await message.answer(response)
+                
+    except Exception as e:
+        logger.error(f"❌ Ошибка получения пользователей: {e}")
         await message.answer(f"❌ Ошибка: {e}")
 
 # === КОМАНДА ДЛЯ ПРОВЕРКИ БАЛАНСОВ ===
