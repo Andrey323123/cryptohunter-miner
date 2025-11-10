@@ -4,6 +4,7 @@ import asyncio
 import logging
 import sys
 from pathlib import Path
+
 # Ускорение
 import uvloop
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
@@ -94,9 +95,9 @@ async def api_user(request: Request):
             user = User(
                 user_id=user_id,
                 username=user_info.get("username", "anon") if user_info else "test",
-                invested_amount=Decimal('100'),
-                free_mining_balance=Decimal('15.5'),
-                total_earned=Decimal('25.8')
+                invested_amount=Decimal('0'),
+                free_mining_balance=Decimal('0'),
+                total_earned=Decimal('0')
             )
             db.add(user)
             await db.commit()
@@ -264,7 +265,7 @@ async def api_referral(request: Request):
                 user_id=user_id,
                 username=user_info.get("username", "anon") if user_info else "anon",
                 invested_amount=Decimal('0'),
-                free_mining_balance=Decimal('15.5'),
+                free_mining_balance=Decimal('0'),
                 total_earned=Decimal('0')
             )
             db.add(user)
@@ -318,37 +319,40 @@ async def hourly_accrual():
             users = result.scalars().all()
             
             updated_count = 0
+            total_accrued = Decimal('0')
+            
             for user in users:
                 invested = user.invested_amount or Decimal('0')
+                
+                # Базовый почасовой доход (бесплатный майнинг)
                 if invested > 0:
-                    # Расчет почасового дохода: 25% годовых / 24 часа / 365 дней
+                    # Если есть инвестиции: 25% годовых
                     hourly = (invested * Decimal('0.25')) / Decimal('365') / Decimal('24')
-                    user.free_mining_balance += hourly
-                    user.total_earned += hourly
-                    updated_count += 1
-                    
-                    logger.debug(f"💰 Начислено {hourly:.6f} TON пользователю {user.user_id}")
+                else:
+                    # Если нет инвестиций: базовый бесплатный майнинг
+                    hourly = Decimal('0.0005')  # 0.0005 TON/час
+                
+                user.free_mining_balance += hourly
+                user.total_earned += hourly
+                updated_count += 1
+                total_accrued += hourly
+                
+                logger.info(f"💰 Начислено {hourly:.6f} TON пользователю {user.user_id} (инвест: {invested})")
             
             await db.commit()
-            logger.info(f"💰 Начисления: выполнены для {updated_count} пользователей")
+            logger.info(f"💰 Начисления: выполнены для {updated_count} пользователей, всего {total_accrued:.6f} TON")
             
     except Exception as e:
         logger.error(f"❌ Начисления: {e}")
 
-# === УЛУЧШЕННЫЙ ПЛАНИРОВЩИК ===
+# === ПРОСТОЙ ПЛАНИРОВЩИК ===
 async def scheduler():
-    """Улучшенный планировщик с точными интервалами"""
+    """Простой планировщик"""
     logger.info("⏰ Планировщик: запущен")
-    
-    # Ждем до начала следующей минуты
-    import datetime
-    now = datetime.datetime.now()
-    wait_seconds = 60 - now.second
-    logger.info(f"⏰ Ожидание {wait_seconds} секунд до следующей минуты...")
-    await asyncio.sleep(wait_seconds)
     
     while True:
         try:
+            import datetime
             now = datetime.datetime.now()
             
             # Начисления каждый час в :00
@@ -358,9 +362,8 @@ async def scheduler():
                 # Ждем 61 секунду чтобы не сработать дважды в одну минуту
                 await asyncio.sleep(61)
             else:
-                # Ждем до следующей минуты
-                wait_seconds = 60 - now.second
-                await asyncio.sleep(wait_seconds)
+                # Ждем до следующей проверки
+                await asyncio.sleep(30)
                 
         except Exception as e:
             logger.error(f"❌ Ошибка планировщика: {e}")
@@ -391,18 +394,16 @@ async def main():
     # Запуск всех сервисов
     logger.info("🎯 Запуск всех сервисов...")
     
-    # Создаем задачи явно
-    bot_task = asyncio.create_task(start_bot())
-    scheduler_task = asyncio.create_task(scheduler())
-    api_task = asyncio.create_task(serve_api())
-    
-    # Ожидаем завершения всех задач
-    await asyncio.gather(
-        bot_task,
-        scheduler_task, 
-        api_task,
-        return_exceptions=True
-    )
+    try:
+        # Запускаем все задачи
+        await asyncio.gather(
+            start_bot(),
+            scheduler(),
+            serve_api(),
+            return_exceptions=True
+        )
+    except Exception as e:
+        logger.error(f"❌ Ошибка в главном цикле: {e}")
 
 if __name__ == "__main__":
     asyncio.run(main())
