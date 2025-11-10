@@ -4,7 +4,6 @@ import asyncio
 import logging
 import sys
 from pathlib import Path
-
 # Ускорение
 import uvloop
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
