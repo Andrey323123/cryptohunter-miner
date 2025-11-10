@@ -38,6 +38,43 @@ def extract_referrer_id(payload: str) -> int | None:
         return int(ref_id)
     return None
 
+# === КОМАНДА ДЛЯ ОБНУЛЕНИЯ БАЛАНСОВ ===
+@router.message(Command("reset_balances"))
+async def reset_balances(message: Message):
+    """Обнулить балансы всем пользователям"""
+    if not is_admin(message.from_user.id):
+        await message.answer("❌ Команда только для администраторов")
+        return
+    
+    try:
+        async with AsyncSessionLocal() as db:
+            # Получаем всех пользователей
+            result = await db.execute(select(User))
+            users = result.scalars().all()
+            
+            reset_count = 0
+            for user in users:
+                # Обнуляем только свободный баланс, инвестиции оставляем
+                user.free_mining_balance = Decimal('0')
+                # total_earned не обнуляем чтобы сохранить историю заработка
+                reset_count += 1
+                logger.info(f"🔄 Обнулен баланс пользователю {user.user_id}")
+            
+            await db.commit()
+            
+            await message.answer(
+                f"✅ Балансы обнулены!\n"
+                f"• Обработано пользователей: {reset_count}\n"
+                f"• Свободные балансы установлены в 0 TON\n"
+                f"• Инвестиции сохранены\n\n"
+                f"Теперь все начинают с чистого листа!"
+            )
+            logger.info(f"🔄 Обнуление балансов: {reset_count} пользователей")
+            
+    except Exception as e:
+        logger.error(f"❌ Ошибка обнуления балансов: {e}")
+        await message.answer(f"❌ Ошибка: {e}")
+
 # === КОМАНДА ДЛЯ ТЕСТИРОВАНИЯ НАЧИСЛЕНИЙ ===
 @router.message(Command("test_accrual"))
 async def test_accrual(message: Message):
